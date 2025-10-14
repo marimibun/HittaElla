@@ -235,14 +235,6 @@
             padding: 5px 0;
             border-top: 1px solid rgba(209, 79, 79, 0.3);
         }
-        
-        /* Style for the device status text */
-        .device-status {
-            font-size: 0.75rem; /* text-xs */
-            font-style: italic;
-            margin-top: 5px;
-            color: var(--dark-text-medium);
-        }
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen flex items-start justify-center">
@@ -314,10 +306,6 @@
                             <span class="ml-2 font-mono text-2xl flashing-text text-red-700">
                                 <span id="countdownDisplay"></span>
                             </span>
-                        </p>
-                        
-                        <!-- Device Status/Vibration Info --><p id="deviceStatus" class="device-status">
-                            Checking device capabilities...
                         </p>
                     </div>
                 </div>
@@ -391,22 +379,22 @@
         // Simulation parameters
         const MAX_MAP_SIZE = 500;       // Defines the maximum size (W x H) and the coordinate system scale (0-500)
         const THREAT_COUNT = 5;         // Number of hostile dots
+        // UPDATED SPEED: This speed ensures the farthest-spawning threat reaches the 50-unit threshold in exactly 50 seconds.
+        // Calculation: (Max Distance - Threshold) / (Time * FPS) = (353.55 - 50) / (50 * 10) ≈ 0.607 units/frame
         const SPEED = 0.607;              
         const UPDATE_INTERVAL_MS = 100; // Simulation update rate (10 FPS)
         const LOADING_DURATION_MS = 5000; // Duration of the loading bar in milliseconds (5 seconds)
+        
+        // USER OVERRIDE: Setting fixed time to 50 seconds.
         const MAX_ACQUISITION_TIME_SECONDS = 50; 
-        // Vibration pattern: Vibrate for 500ms, pause for 500ms (repeats every 1 second)
-        const VIBRATION_PATTERN = 500; 
         // ----------------------------------------
         
         let simulationInterval;
-        let countdownInterval; 
-        let vibrationInterval; // New interval for repeating vibration
-        let countdownTimeRemaining = 0; 
+        let countdownInterval; // Interval for the 1-second countdown
+        let countdownTimeRemaining = 0; // Current time remaining
         let threats = [];
         let blueDotPosition = { x: MAX_MAP_SIZE / 2, y: MAX_MAP_SIZE / 2 }; 
-        let currentMapSize = MAX_MAP_SIZE; 
-        let isVibrationSupported = false;
+        let currentMapSize = MAX_MAP_SIZE; // Will hold the current actual pixel width of the map container
 
         // DOM REFERENCES
         const latInput = document.getElementById('latInput');
@@ -417,7 +405,6 @@
         const audioPlayer = document.getElementById('audioPlayer');
         const mapContainer = document.getElementById('mapContainer');
         const blueDot = document.getElementById('blueDot');
-        const deviceStatus = document.getElementById('deviceStatus');
         
         // --- STATUS REFERENCES ---
         const loadingStatus = document.getElementById('loadingStatus'); 
@@ -448,50 +435,6 @@
         const audioError = document.getElementById('audioError');
 
         /**
-         * Checks if the Vibration API is available and updates the status message.
-         */
-        function checkVibrationSupport() {
-            if ('vibrate' in navigator) {
-                isVibrationSupported = true;
-                deviceStatus.textContent = "Vibration: ACTIVE (Alarm will use haptic feedback)";
-                deviceStatus.classList.add('text-green-600');
-                deviceStatus.classList.remove('text-gray-500');
-            } else {
-                isVibrationSupported = false;
-                deviceStatus.textContent = "Vibration: INACTIVE (Device/Browser does not support haptic feedback)";
-                deviceStatus.classList.add('text-red-600');
-                deviceStatus.classList.remove('text-gray-500');
-            }
-        }
-
-        /**
-         * Starts the continuous vibration alarm.
-         */
-        function startVibrationAlarm() {
-            stopVibrationAlarm(); // Clear any existing interval
-            if (isVibrationSupported) {
-                // Vibrate for 500ms, pause for 500ms (repeating)
-                navigator.vibrate(VIBRATION_PATTERN); // Initial pulse
-                vibrationInterval = setInterval(() => {
-                    navigator.vibrate(VIBRATION_PATTERN);
-                }, VIBRATION_PATTERN * 2); // Repeat every 1000ms (500ms vib + 500ms pause)
-            }
-        }
-        
-        /**
-         * Stops the vibration and clears the interval.
-         */
-        function stopVibrationAlarm() {
-            if (vibrationInterval) {
-                clearInterval(vibrationInterval);
-                vibrationInterval = null;
-            }
-            if (isVibrationSupported) {
-                navigator.vibrate(0); // Stop any currently running vibration
-            }
-        }
-        
-        /**
          * Checks the input values against the secret coordinates.
          * Enables/disables the button based on the match.
          */
@@ -519,6 +462,7 @@
         
         /**
          * Reads the current map dimensions and updates the dot positions based on the new scale.
+         * This ensures responsiveness on window resize or small screens.
          */
         function updateDotStyles() {
             // Read the current pixel size of the map container
@@ -541,6 +485,7 @@
         
         /**
          * Initializes the blue dot and red dots on the map in random starting positions.
+         * Note: All coordinate logic happens in the MAX_MAP_SIZE (500) scale.
          */
         function initializeDots() {
             // Remove previous threats
@@ -609,6 +554,7 @@
                     // Check if threats are still active when the timer hits zero
                     if (threats.some(t => t.active)) {
                          // The worst-case time has expired, but the threats are still active 
+                         // (e.g., they haven't finished the movement loop yet)
                          trackingStatusText.textContent = "CRITICAL FAILURE. TARGET ACQUISITION IMMINENT.";
                          countdownDisplay.textContent = "00";
                     }
@@ -637,6 +583,7 @@
                     threat.active = false;
                     // Slightly reduce opacity and movement speed for visual confirmation
                     threat.element.style.opacity = '0.6'; 
+                    // No need to update trackingStatusText here, let the countdown handle the main status.
                     return;
                 }
 
@@ -654,13 +601,15 @@
             // Check if all threats have arrived
             if (activeThreats === 0) {
                 clearInterval(simulationInterval);
+                // Stop the countdown if threats are secured early
                 clearInterval(countdownInterval);
-                stopVibrationAlarm(); // Stop the vibration alarm
                 audioPlayer.pause();
                 trackingStatusText.textContent = "PERIMETER SECURED. ALL HOSTILE ENTITIES ARE STATIONARY.";
                 countdownDisplay.parentElement.classList.add('hidden'); // Hide countdown
                 trackingStatus.classList.remove('text-red-600');
                 trackingStatus.classList.add('text-green-600');
+            } else {
+                // Tracking status text updates handled by startCountdown/updateCountdownDisplay
             }
         }
         
@@ -727,40 +676,40 @@
 
 
         /**
-         * Hides the modal, starts the audio and vibration, and begins the map simulation and countdown.
+         * Hides the modal, starts the audio, and begins the map simulation and countdown.
          */
         function startThreatTracking() { 
             // 1. Hide the modal and loading bar
             errorModal.classList.add('hidden');
             loadingArea.classList.add('hidden');
-            loadingStatus.classList.add('hidden'); 
+            loadingStatus.classList.add('hidden'); // Hide the loading status
             
             // 2. Show the map and the tracking status
             mapWrapper.classList.remove('hidden');
-            trackingStatus.classList.remove('hidden'); 
+            trackingStatus.classList.remove('hidden'); // Show the tracking status
             
             // Titles
-            loadingTitle.classList.add('hidden');    
-            trackingTitle.classList.remove('hidden'); 
+            loadingTitle.classList.add('hidden');    // Hide loading title
+            trackingTitle.classList.remove('hidden'); // Show tracking title
             
-            // 3. START AUDIO and VIBRATION
-            audioControlWrapper.classList.remove('hidden'); 
-            startVibrationAlarm(); // Start the vibration alarm
+            // 3. SHOW AND START AUDIO
+            audioControlWrapper.classList.remove('hidden'); // Make the audio player wrapper visible
             
             // Set the audio volume immediately before playback
             audioPlayer.volume = DEFAULT_VOLUME;
             
             // Attempt to play audio immediately after the user click on "Acknowledge"
             audioPlayer.play().catch(error => {
+                // This catch handles browsers that block autoplay.
                 console.error("Audio autoplay failed. Please click the play button in the 'Incoming Transmission' section.", error);
             });
 
             // 4. Initialize visual dots and start movement loop
             initializeDots();
-            updateDotStyles(); 
+            updateDotStyles(); // Initial call to set dot positions correctly based on current screen size
             simulationInterval = setInterval(updateDots, UPDATE_INTERVAL_MS);
             
-            // 5. Start the active countdown
+            // 5. Start the active countdown, using the calculated time
             startCountdown();
         }
         
@@ -785,7 +734,6 @@
         // Initial setup: ensure button state is correct on load
         window.onload = () => {
             checkCoordinates();
-            checkVibrationSupport(); // Check for vibration support on load
             
             // Add a resize listener to handle orientation/size changes while the map is visible.
             window.addEventListener('resize', () => {
