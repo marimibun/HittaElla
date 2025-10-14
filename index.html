@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tactical Coordinate Tracker</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================================================
+         * STYLING & AESTHETICS (Dark & Scary Theme)
+         * ========================================================================= */
+        :root {
+            --map-size: 500px; /* Now represents the maximum size */
+            /* Dark Theme Color Palette */
+            --dark-background: #1A1A1A; /* Very dark background for the page */
+            --dark-window-bg: #2C2C2C; /* Darker gray for main windows/dialogs */
+            --dark-border: #4F4F4F;    /* Darker, muted border */
+            --dark-title-bg: #1C2A3A;  /* Deep dark blue for title bars */
+            --dark-button-default-bg: #4A4A4A; /* Darker default button */
+            --dark-text-light: #E0E0E0; /* Light gray for main text on dark backgrounds */
+            --dark-text-medium: #A0A0A0; /* Medium gray for secondary text */
+            --dark-red: #D14F4F; /* More intense, desaturated red */
+            --dark-blue: #4A7BAA; /* Deep blue for accents */
+            --dark-green: #6AA84F; /* Muted green for success/active states */
+        }
+        body {
+            font-family: 'Inter', Tahoma, Verdana, sans-serif;
+            background-color: var(--dark-background);
+            color: var(--dark-text-light); /* Light text on dark background */
+        }
+
+        /* Main Window/Dialog Container */
+        .win7-dialog {
+            background-color: var(--dark-window-bg);
+            border: 1px solid var(--dark-border);
+            border-radius: 6px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5); /* Stronger shadow for depth */
+        }
+
+        /* Popup Box Style (for error modal) */
+        .win7-popup {
+            background-color: var(--dark-window-bg); /* Dark background */
+            border: 1px solid var(--dark-border); /* Border */
+            border-radius: 6px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7); /* Even stronger shadow */
+            width: 90%; 
+            max-width: 400px; 
+            overflow: hidden; 
+        }
+
+        /* Title Bar Simulation (The dark header) */
+        .win7-title {
+            color: white;
+            background: linear-gradient(to bottom, #304A6A, var(--dark-title-bg)); /* Dark blue gradient */
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            padding: 10px 15px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin: -24px -24px 0 -24px; 
+        }
+        
+        /* Custom Button Styling (Base Grey) */
+        .win7-button {
+            background-color: var(--dark-button-default-bg);
+            color: var(--dark-text-light);
+            border: 1px solid var(--dark-border);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+            cursor: default;
+        }
+        
+        /* New style for the gray/subdued button state (for "OK" in the modal) */
+        .win7-button-subdued {
+            /* Uses the dark button default background for a grey, non-activated look */
+            background: var(--dark-button-default-bg);
+            color: var(--dark-text-light);
+            border: 1px solid var(--dark-border);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+            cursor: pointer;
+        }
+        .win7-button-subdued:hover {
+            background-color: #5A5A5A; /* Slightly darker on hover for feedback */
+        }
+
+        /* Activated Button Style (More sickly green - used for the main "Activate" button only) */
+        .win7-button:not(:disabled) {
+            background: linear-gradient(to bottom, #77b94a, #4e8a2a); /* Muted, sickly green */
+            border-color: #3b6b21;
+            color: white;
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+        }
+        
+        /* New style for the red "Cancel" button - NOW STANDALONE */
+        .win7-button-red {
+            background: linear-gradient(to bottom, #D14F4F, #A13D3D); /* Dark red gradient */
+            border-color: #7b2c2c;
+            color: white;
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset; /* Added missing inset shadow */
+        }
+        .win7-button-red:hover {
+            background: linear-gradient(to bottom, #D86969, #B85151);
+        }
+
+        /* Custom styling for Input Fields (Latitude/Longitude) */
+        input[type="number"] {
+            background-color: #3A3A3A; /* Darker input background */
+            color: var(--dark-text-light);
+            border: 1px solid var(--dark-border); 
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type="number"]:focus {
+            border-color: var(--dark-blue); /* Focus blue */
+            box-shadow: 0 0 0 2px rgba(74, 123, 170, 0.4); /* Stronger glow */
+        }
+        
+        /* Map Container (Area where simulation runs) 
+         * UPDATED: Uses fluid width and padding-bottom for 1:1 aspect ratio */
+        #mapContainer {
+            width: 100%; /* Fill the wrapper width */
+            max-width: var(--map-size); /* Limit the size to 500px */
+            height: 0; /* Set height to 0 to use padding-bottom for aspect ratio */
+            padding-bottom: 100%; /* Maintain 1:1 aspect ratio */
+            position: relative; /* Essential for absolute dot positioning */
+            
+            background-color: #252525; /* Dark map background */
+            border: 2px solid var(--dark-border);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* Stronger inner shadow */
+        }
+
+        /* Shared Dot Styles */
+        .dot {
+            position: absolute; /* REQUIRED for movement */
+            width: 10px; /* Dot size */
+            height: 10px; /* Dot size */
+            border-radius: 50%; /* Make it circular */
+            transform: translate(-50%, -50%); /* Center dot on its coordinates */
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.7); /* Darker shadow for dots */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Subtler white border */
+        }
+        
+        /* Label above the user's blue dot (POSITIONING ADDED HERE) */
+        .dot-label {
+            position: absolute; /* Allow floating relative to the dot */
+            left: 50%; /* Start positioning from the center */
+            bottom: 150%; /* Move up 150% of dot height (above the dot) */
+            transform: translateX(-50%); /* Center horizontally */
+            white-space: nowrap; /* Prevent wrapping */
+            
+            /* Aesthetics */
+            color: var(--dark-blue); 
+            background-color: #1A1A1A; /* Dark label background */
+            border: 1px solid var(--dark-blue);
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-size: 0.75rem; 
+            font-weight: bold; 
+            box-shadow: 0 1px 5px rgba(0,0,0,0.5);
+        }
+
+        /* Blue Dot (User) */
+        .blue-dot {
+            background-color: var(--dark-blue);
+            box-shadow: 0 0 15px var(--dark-blue); /* Stronger glow */
+        }
+
+        /* Red Dot (Threats) */
+        .red-dot {
+            background-color: var(--dark-red);
+            box-shadow: 0 0 15px var(--dark-red); /* Stronger glow */
+        }
+
+        /* Modal Overlay and Flashing Text */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Darker, less transparent overlay */
+            backdrop-filter: blur(4px); /* More blur */
+            z-index: 1000; /* Ensure it is on top */
+            display: flex; /* Center horizontally and vertically */
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+        }
+        @keyframes flashing {
+            0%, 100% { color: #FF6666; text-shadow: 0 0 8px rgba(255, 102, 102, 0.8); } /* Brighter, more aggressive flash */
+            50% { color: #AA3333; text-shadow: none; }
+        }
+        .flashing-text {
+            animation: flashing 0.4s infinite alternate; /* Faster flash */
+        }
+        
+        /* Specific text color adjustments for the live feed box */
+        #statusContainer p.text-gray-800, #statusContainer p.text-gray-500 {
+            color: var(--dark-text-light);
+        }
+        #statusContainer .bg-gray-100 {
+            background-color: #3A3A3A; /* Darker background for status box */
+            border-color: var(--dark-border);
+        }
+        #loadingStatus, #trackingStatus {
+            color: var(--dark-blue); /* Keep status text readable */
+        }
+        #trackingStatus.text-red-600 {
+            color: var(--dark-red);
+        }
+        #trackingStatus.text-green-600 {
+            color: var(--dark-green);
+        }
+        #targetCoords {
+            color: var(--dark-text-light); /* Ensure coordinates are visible */
+        }
+        #loadingArea h3 {
+            color: var(--dark-blue);
+        }
+        #progressBar {
+            background-color: var(--dark-blue); /* Darker blue progress bar */
+        }
+        .text-blue-700 { color: var(--dark-blue); } /* Apply dark blue to existing blue text */
+        .text-red-700 { color: var(--dark-red); } /* Apply dark red to existing red text */
+        .text-red-600 { color: var(--dark-red); } /* Apply dark red to existing red text */
+        
+        /* New style for the audio error message */
+        .audio-error-text {
+            color: var(--dark-red);
+            font-size: 0.875rem; /* text-sm */
+            font-weight: bold;
+            margin-top: 5px;
+            padding: 5px 0;
+            border-top: 1px solid rgba(209, 79, 79, 0.3);
+        }
+        
+        /* Style for the device status text */
+        .device-status {
+            font-size: 0.75rem; /* text-xs */
+            font-style: italic;
+            margin-top: 5px;
+            color: var(--dark-text-medium);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-start justify-center">
+
+    <!-- MAIN WINDOW CONTAINER --><div class="w-full max-w-2xl p-6 space-y-6 win7-dialog">
+        <h1 class="win7-title">
+            Secure Access Terminal - [WIN 7.1 Build]
+        </h1>
+        
+        <!-- SECTION 1: INPUT AND ACTIVATION (Visible Initially) --><div id="inputArea" class="space-y-4 pt-4">
+            <!-- UPDATED TEXT COLOR to text-gray-400 for better visibility --><p class="text-sm text-gray-400"> 
+                Please enter the required coordinates to access the tactical link.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                <!-- Latitude Input Field - Placeholder provides the "Latitude" label --><input type="number" step="any" id="latInput" placeholder="Latitude"
+                       class="flex-1 p-3 rounded-md placeholder-gray-500 outline-none"
+                       oninput="checkCoordinates()">
+                <!-- Longitude Input Field - Placeholder provides the "Longitude" label --><input type="number" step="any" id="lonInput" placeholder="Longitude"
+                       class="flex-1 p-3 rounded-md placeholder-gray-500 outline-none"
+                       oninput="checkCoordinates()">
+            </div>
+
+            <!-- Main Activation Button --><button id="verifyButton" disabled
+                    class="w-full py-3 px-4 rounded-md text-lg font-semibold transition duration-300 win7-button">
+                Activate Tracking Link
+            </button>
+        </div>
+
+        <!-- SECTION 2: SIMULATION/RESULT AREA (Hidden initially, visible after successful input) --><div id="resultArea" class="hidden space-y-6 pt-4">
+            
+            <!-- TOP STATUS ROW: Holds Audio Player and Live Feed Status -->
+            <!-- Layout is set to flex-col (stacked) on all screen sizes -->
+            <div class="flex flex-col gap-6">
+                <!-- AUDIO PLAYER SECTION (Incoming Transmission) --><div class="flex-shrink-0 text-center">
+                    <h2 class="text-xl font-semibold text-red-600 mb-2">Incoming Transmission</h2>
+                    <!-- REMOVED 'controls' attribute and visual Tailwind classes from <audio> to hide the player but keep the sound function -->
+                    <div id="audioControlWrapper" class="hidden"> 
+                        <audio id="audioPlayer" loop>
+                            <source id="audioSource" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
+                            Your browser does not support the audio element.
+                            <!-- FALLBACK TEXT IF AUDIO FAILS TO LOAD --><p id="audioError" class="audio-error-text hidden">
+                                Error: Sound file not found. Check media host.
+                            </p>
+                        </audio>
+                        <p class="text-xs text-gray-500 mt-2">
+                            Tactical warning signal activated.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- LIVE FEED STATUS CONTAINER --><div id="statusContainer" class="flex-grow text-center">
+                    <!-- Title during Loading (Visible initially) --><h2 id="loadingTitle" class="text-2xl font-bold text-blue-700 mb-2">Initiating Secure Link...</h2> 
+
+                    <!-- Title during Tracking (Hidden initially). Text content removed to rely solely on audio alarm. --><h2 id="trackingTitle" class="text-2xl font-bold text-red-700 mb-2 hidden"></h2>
+                    
+                    <h2 class="text-xl font-semibold text-blue-700 mb-2">Live Feed Status</h2>
+                    <div class="bg-gray-100 p-3 rounded-md border border-gray-300 text-sm">
+                        <p class="text-gray-800">Target Coordinates: <span id="targetCoords" class="font-mono"></span></p>
+                        
+                        <!-- 1. Status during Loading (Initial state) --><p id="loadingStatus" class="text-blue-600 font-bold mt-1">
+                            Status: <span id="loadingStatusText">Establishing secure link...</span>
+                        </p>
+
+                        <!-- 2. Status during Tracking (Hidden until tracking starts) -->
+                        <p id="trackingStatus" class="text-red-600 font-bold mt-1 hidden flex items-center justify-center">
+                            <!-- Status Text will be dynamic: "Threats Closing. Time: [COUNTDOWN]" -->
+                            <span id="trackingStatusText">Threats Closing. Time Remaining:</span>
+                            <span class="ml-2 font-mono text-2xl flashing-text text-red-700">
+                                <span id="countdownDisplay"></span>
+                            </span>
+                        </p>
+                        
+                        <!-- Device Status/Vibration Info --><p id="deviceStatus" class="device-status">
+                            Checking device capabilities...
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOADING BAR AREA (Visible during 5-second search) --><div id="loadingArea" class="flex justify-center flex-col items-center p-4">
+                <h3 class="text-lg font-mono text-blue-800 mb-3">Searching location...</h3>
+                <div class="w-full max-w-lg bg-gray-300 rounded-full h-4 relative overflow-hidden border border-gray-400">
+                    <div id="progressBar" class="h-full bg-blue-500 rounded-full transition-all duration-100" style="width: 0%;"></div>
+                    <span id="progressText" class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white text-shadow-sm">0%</span>
+                </div>
+            </div>
+
+            <!-- MAP SIMULATION (Hidden until after the popup) --><div class="flex justify-center hidden" id="mapWrapper"> 
+                <div id="mapContainer" class="rounded-md relative">
+                    <!-- Blue Dot (User) --><div id="blueDot" class="dot blue-dot" title="Your Location">
+                        <span class="dot-label">YOU</span>
+                    </div>
+                    <!-- Red Dots (Threats) will be dynamically added by JavaScript --></div>
+            </div>
+        </div>
+    </div>
+    <!-- END MAIN WINDOW CONTAINER --><!-- POPUP MODAL (Hidden initially, appears after loading) --><div id="errorModal" class="modal-overlay hidden">
+        <!-- win7-popup now contains the proper styling for the dialog box --><div class="win7-popup"> 
+            <div class="win7-title" style="margin: 0; border-radius: 6px 6px 0 0;">
+                <span style="color: yellow;">&#9888;</span> Security Alert
+            </div>
+            <div class="p-6 text-center space-y-4">
+                <div class="flashing-text text-3xl">
+                    ERROR: Your location is being tracked
+                </div>
+                
+                <!-- START: ADDED GIF/Image Placeholder for the Popup --><img id="modalGif" 
+                     src="https://placehold.co/180x180/8b0000/FFFFFF?text=!!+ALERT+!!" 
+                     alt="Security Alert Graphic" 
+                     class="mx-auto w-48 h-48 rounded-lg border-2 border-red-600 shadow-xl"
+                     style="margin-top: 10px; margin-bottom: 10px; opacity: 0.9;"
+                     onerror="this.src='https://placehold.co/180x180/8b0000/FFFFFF?text=!!+ALERT+!!'">
+                <!-- END: ADDED GIF/Image Placeholder for the Popup -->
+                <!-- UPDATED TEXT COLOR to text-gray-400 for better visibility --><p class="text-sm text-gray-400">
+                    Transmission intercepted. Tracking link established by unauthorized entities.
+                </p>
+                <!-- START: UPDATED BUTTONS (OK/Cancel) -->
+                <div class="flex justify-center gap-4 mt-4">
+                    <!-- The "OK" button (uses the subdued grey style) --><button id="okModalButton" 
+                            class="py-2 px-6 rounded-md font-semibold win7-button-subdued"
+                            style="min-width: 100px;">
+                        OK
+                    </button>
+                    <!-- The red "Cancel" button (removed the conflicting 'win7-button' class) --><button id="cancelModalButton" 
+                            class="py-2 px-6 rounded-md font-semibold win7-button-red"
+                            style="min-width: 100px;">
+                        Cancel
+                    </button>
+                </div>
+                <!-- END: UPDATED BUTTONS (OK/Cancel) -->
+            </div>
+        </div>
+    </div>
+    <!-- END Modal --><!-- =========================================================================
+     * JAVASCRIPT LOGIC
+     * ========================================================================= --><script>
+        // --- CONFIGURATION: EDIT THESE VALUES ---
+        // Change the fixed Latitude value here to set the required input coordinate.
+        const SECRET_LAT = 0; 
+        // Change the fixed Longitude value here to set the required input coordinate.
+        const SECRET_LON = 0; 
+        // Set the default playback volume (0.0 = silent, 1.0 = maximum).
+        const DEFAULT_VOLUME = 0.3; // Defaulting to 30% volume
+
+        // Simulation parameters
+        const MAX_MAP_SIZE = 500;       // Defines the maximum size (W x H) and the coordinate system scale (0-500)
+        const THREAT_COUNT = 5;         // Number of hostile dots
+        const SPEED = 0.607;              
+        const UPDATE_INTERVAL_MS = 100; // Simulation update rate (10 FPS)
+        const LOADING_DURATION_MS = 5000; // Duration of the loading bar in milliseconds (5 seconds)
+        const MAX_ACQUISITION_TIME_SECONDS = 50; 
+        // Vibration pattern: Vibrate for 500ms, pause for 500ms (repeats every 1 second)
+        const VIBRATION_PATTERN = 500; 
+        // ----------------------------------------
+        
+        let simulationInterval;
+        let countdownInterval; 
+        let vibrationInterval; // New interval for repeating vibration
+        let countdownTimeRemaining = 0; 
+        let threats = [];
+        let blueDotPosition = { x: MAX_MAP_SIZE / 2, y: MAX_MAP_SIZE / 2 }; 
+        let currentMapSize = MAX_MAP_SIZE; 
+        let isVibrationSupported = false;
+
+        // DOM REFERENCES
+        const latInput = document.getElementById('latInput');
+        const lonInput = document.getElementById('lonInput');
+        const verifyButton = document.getElementById('verifyButton');
+        const inputArea = document.getElementById('inputArea');
+        const resultArea = document.getElementById('resultArea');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const mapContainer = document.getElementById('mapContainer');
+        const blueDot = document.getElementById('blueDot');
+        const deviceStatus = document.getElementById('deviceStatus');
+        
+        // --- STATUS REFERENCES ---
+        const loadingStatus = document.getElementById('loadingStatus'); 
+        const trackingStatus = document.getElementById('trackingStatus'); 
+        const trackingStatusText = document.getElementById('trackingStatusText'); 
+        const countdownDisplay = document.getElementById('countdownDisplay'); 
+        
+        // Titles
+        const loadingTitle = document.getElementById('loadingTitle');
+        const trackingTitle = document.getElementById('trackingTitle');
+        // -------------------------------------
+
+        const targetCoordsText = document.getElementById('targetCoords');
+        const errorModal = document.getElementById('errorModal');
+        // Modal buttons
+        const okModalButton = document.getElementById('okModalButton'); 
+        const cancelModalButton = document.getElementById('cancelModalButton');
+        const audioControlWrapper = document.getElementById('audioControlWrapper');
+
+        // Other DOM references
+        const loadingArea = document.getElementById('loadingArea');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const mapWrapper = document.getElementById('mapWrapper');
+        
+        // AUDIO ERROR REFERENCES
+        const audioSource = document.getElementById('audioSource');
+        const audioError = document.getElementById('audioError');
+
+        /**
+         * Checks if the Vibration API is available and updates the status message.
+         */
+        function checkVibrationSupport() {
+            if ('vibrate' in navigator) {
+                isVibrationSupported = true;
+                deviceStatus.textContent = "Vibration: ACTIVE (Alarm will use haptic feedback)";
+                deviceStatus.classList.add('text-green-600');
+                deviceStatus.classList.remove('text-gray-500');
+            } else {
+                isVibrationSupported = false;
+                deviceStatus.textContent = "Vibration: INACTIVE (Device/Browser does not support haptic feedback)";
+                deviceStatus.classList.add('text-red-600');
+                deviceStatus.classList.remove('text-gray-500');
+            }
+        }
+
+        /**
+         * Starts the continuous vibration alarm.
+         */
+        function startVibrationAlarm() {
+            stopVibrationAlarm(); // Clear any existing interval
+            if (isVibrationSupported) {
+                // Vibrate for 500ms, pause for 500ms (repeating)
+                navigator.vibrate(VIBRATION_PATTERN); // Initial pulse
+                vibrationInterval = setInterval(() => {
+                    navigator.vibrate(VIBRATION_PATTERN);
+                }, VIBRATION_PATTERN * 2); // Repeat every 1000ms (500ms vib + 500ms pause)
+            }
+        }
+        
+        /**
+         * Stops the vibration and clears the interval.
+         */
+        function stopVibrationAlarm() {
+            if (vibrationInterval) {
+                clearInterval(vibrationInterval);
+                vibrationInterval = null;
+            }
+            if (isVibrationSupported) {
+                navigator.vibrate(0); // Stop any currently running vibration
+            }
+        }
+        
+        /**
+         * Checks the input values against the secret coordinates.
+         * Enables/disables the button based on the match.
+         */
+        function checkCoordinates() {
+            try {
+                // Use fixed-point arithmetic for accurate floating point comparison
+                const inputLat = parseFloat(latInput.value).toFixed(7);
+                const secretLat = SECRET_LAT.toFixed(7);
+                const inputLon = parseFloat(lonInput.value).toFixed(7);
+                const secretLon = SECRET_LON.toFixed(7);
+
+                const isLatMatch = inputLat === secretLat;
+                const isLonMatch = inputLon === secretLon;
+
+                if (isLatMatch && isLonMatch) {
+                    verifyButton.disabled = false;
+                    verifyButton.onclick = triggerInitialActivation; 
+                } else {
+                    verifyButton.disabled = true;
+                }
+            } catch (error) {
+                verifyButton.disabled = true;
+            }
+        }
+        
+        /**
+         * Reads the current map dimensions and updates the dot positions based on the new scale.
+         */
+        function updateDotStyles() {
+            // Read the current pixel size of the map container
+            const actualSize = mapContainer.clientWidth; 
+            currentMapSize = actualSize; // Update the global size tracker
+            
+            // Function to map the normalized (0-MAX_MAP_SIZE) coordinate to the actual pixel size
+            const scaleCoordinate = (coord) => (coord / MAX_MAP_SIZE) * actualSize;
+
+            // 1. Position Blue Dot
+            blueDot.style.left = `${scaleCoordinate(blueDotPosition.x)}px`;
+            blueDot.style.top = `${scaleCoordinate(blueDotPosition.y)}px`;
+            
+            // 2. Position Red Dots
+            threats.forEach(threat => {
+                threat.element.style.left = `${scaleCoordinate(threat.x)}px`;
+                threat.element.style.top = `${scaleCoordinate(threat.y)}px`;
+            });
+        }
+        
+        /**
+         * Initializes the blue dot and red dots on the map in random starting positions.
+         */
+        function initializeDots() {
+            // Remove previous threats
+            threats.forEach(threat => threat.element.remove());
+            threats = [];
+
+            // Set the user dot (blue) to the center (in 0-500 scale)
+            blueDotPosition = { x: MAX_MAP_SIZE / 2, y: MAX_MAP_SIZE / 2 };
+
+            for (let i = 0; i < THREAT_COUNT; i++) {
+                // Spawn threats randomly on the edges of the map
+                const isVertical = Math.random() > 0.5;
+                let startXRel = isVertical ? Math.random() : (Math.random() < 0.5 ? 0 : 1);
+                let startYRel = isVertical ? (Math.random() < 0.5 ? 0 : 1) : Math.random();
+
+                // Convert relative (0-1) to MAX_MAP_SIZE (0-500) scale
+                let startX = startXRel * MAX_MAP_SIZE;
+                let startY = startYRel * MAX_MAP_SIZE;
+
+                const dotElement = document.createElement('div');
+                dotElement.className = 'dot red-dot';
+                dotElement.title = `Threat ${i + 1}`;
+                mapContainer.appendChild(dotElement);
+
+                threats.push({
+                    element: dotElement,
+                    x: startX, // Stored in 0-500 scale
+                    y: startY, // Stored in 0-500 scale
+                    active: true
+                });
+            }
+        }
+        
+        /**
+         * Updates the countdown display every second.
+         */
+        function updateCountdownDisplay() {
+            // Format the time as SS, padding with '0'
+            const displaySeconds = countdownTimeRemaining < 0 ? 0 : countdownTimeRemaining;
+            const formattedTime = String(displaySeconds).padStart(2, '0');
+            countdownDisplay.textContent = formattedTime;
+            
+            // Update the tracking status text 
+            if (countdownTimeRemaining > 0) {
+                 trackingStatusText.textContent = `Threats Closing. Time Remaining:`;
+                 // Ensure countdown is visible
+                 countdownDisplay.parentElement.classList.remove('hidden'); 
+            }
+        }
+        
+        /**
+         * Starts the 1-second countdown timer.
+         */
+        function startCountdown() {
+            // Set countdown time to the user-defined maximum acquisition time (now 50 seconds)
+            countdownTimeRemaining = MAX_ACQUISITION_TIME_SECONDS;
+            updateCountdownDisplay(); // Initial display update
+            
+            countdownInterval = setInterval(() => {
+                countdownTimeRemaining--;
+                updateCountdownDisplay();
+
+                if (countdownTimeRemaining <= 0) {
+                    clearInterval(countdownInterval);
+                    
+                    // Check if threats are still active when the timer hits zero
+                    if (threats.some(t => t.active)) {
+                         // The worst-case time has expired, but the threats are still active 
+                         trackingStatusText.textContent = "CRITICAL FAILURE. TARGET ACQUISITION IMMINENT.";
+                         countdownDisplay.textContent = "00";
+                    }
+                }
+            }, 1000); // Update every 1 second
+        }
+
+
+        /**
+         * The main simulation loop: moves the red dots toward the blue dot.
+         */
+        function updateDots() {
+            let activeThreats = 0;
+            const threshold = 50; // Distance threshold for threats to stop and "surround" (in 0-500 scale)
+
+            threats.forEach(threat => {
+                if (!threat.active) return;
+                activeThreats++;
+
+                const dx = blueDotPosition.x - threat.x;
+                const dy = blueDotPosition.y - threat.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < threshold) {
+                    // Threat reached the perimeter
+                    threat.active = false;
+                    // Slightly reduce opacity and movement speed for visual confirmation
+                    threat.element.style.opacity = '0.6'; 
+                    return;
+                }
+
+                // Calculate movement vector and move the threat (still in 0-500 scale)
+                const normalizedDx = dx / distance;
+                const normalizedDy = dy / distance;
+
+                threat.x += normalizedDx * SPEED;
+                threat.y += normalizedDy * SPEED;
+            });
+            
+            // Update the visual positions based on the current screen size
+            updateDotStyles(); 
+
+            // Check if all threats have arrived
+            if (activeThreats === 0) {
+                clearInterval(simulationInterval);
+                clearInterval(countdownInterval);
+                stopVibrationAlarm(); // Stop the vibration alarm
+                audioPlayer.pause();
+                trackingStatusText.textContent = "PERIMETER SECURED. ALL HOSTILE ENTITIES ARE STATIONARY.";
+                countdownDisplay.parentElement.classList.add('hidden'); // Hide countdown
+                trackingStatus.classList.remove('text-red-600');
+                trackingStatus.classList.add('text-green-600');
+            }
+        }
+        
+        /**
+         * Shows the error modal/popup.
+         */
+        function showErrorModal() {
+            errorModal.classList.remove('hidden');
+        }
+
+        /**
+         * Starts the loading bar animation and sets a timeout to show the modal.
+         */
+        function startLoadingBar() {
+            // Setup UI for loading phase
+            loadingArea.classList.remove('hidden');
+            mapWrapper.classList.add('hidden');
+            
+            // Status lines
+            trackingStatus.classList.add('hidden'); // Ensure tracking status is hidden
+            loadingStatus.classList.remove('hidden'); // Ensure loading status is visible
+            
+            // Titles
+            loadingTitle.classList.remove('hidden'); // Show loading title
+            trackingTitle.classList.add('hidden');   // Hide tracking title 
+            
+            // Reset progress bar
+            let progress = 0;
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+            
+            const totalTime = LOADING_DURATION_MS;
+            const intervalTime = 100;
+            const steps = totalTime / intervalTime;
+            let currentStep = 0;
+
+            const loadingInterval = setInterval(() => {
+                currentStep++;
+                if (currentStep <= steps) {
+                    progress = Math.round((currentStep / steps) * 100);
+                    progressBar.style.width = `${progress}%`;
+                    progressText.textContent = `${progress}%`;
+
+                    if (currentStep >= steps) {
+                         clearInterval(loadingInterval);
+                         showErrorModal(); // Show modal after 5 seconds
+                    }
+                }
+            }, intervalTime);
+        }
+
+        /**
+         * Initiates the sequence after the correct coordinates are entered.
+         */
+        function triggerInitialActivation() {
+            // Update UI state (hide inputs, show results section)
+            inputArea.classList.add('hidden');
+            resultArea.classList.remove('hidden');
+            targetCoordsText.textContent = `${SECRET_LAT.toFixed(7)}, ${SECRET_LON.toFixed(7)}`;
+
+            // Start the loading bar animation (which is silent)
+            startLoadingBar();
+        }
+
+
+        /**
+         * Hides the modal, starts the audio and vibration, and begins the map simulation and countdown.
+         */
+        function startThreatTracking() { 
+            // 1. Hide the modal and loading bar
+            errorModal.classList.add('hidden');
+            loadingArea.classList.add('hidden');
+            loadingStatus.classList.add('hidden'); 
+            
+            // 2. Show the map and the tracking status
+            mapWrapper.classList.remove('hidden');
+            trackingStatus.classList.remove('hidden'); 
+            
+            // Titles
+            loadingTitle.classList.add('hidden');    
+            trackingTitle.classList.remove('hidden'); 
+            
+            // 3. START AUDIO and VIBRATION
+            audioControlWrapper.classList.remove('hidden'); 
+            startVibrationAlarm(); // Start the vibration alarm
+            
+            // Set the audio volume immediately before playback
+            audioPlayer.volume = DEFAULT_VOLUME;
+            
+            // Attempt to play audio immediately after the user click on "Acknowledge"
+            audioPlayer.play().catch(error => {
+                console.error("Audio autoplay failed. Please click the play button in the 'Incoming Transmission' section.", error);
+            });
+
+            // 4. Initialize visual dots and start movement loop
+            initializeDots();
+            updateDotStyles(); 
+            simulationInterval = setInterval(updateDots, UPDATE_INTERVAL_MS);
+            
+            // 5. Start the active countdown
+            startCountdown();
+        }
+        
+        // Add listener to the player element itself to catch network errors
+        audioPlayer.addEventListener('error', (e) => {
+             // 4 = MEDIA_ERR_SRC_NOT_SUPPORTED (The common error for inaccessible files)
+             if (audioPlayer.networkState === audioPlayer.NETWORK_NO_SOURCE || audioPlayer.error?.code === 4) {
+                 console.error("Audio network error detected. The file link is likely inaccessible or corrupted.");
+                 // Display the UI error message
+                 audioError.classList.remove('hidden');
+             }
+        });
+
+        // Try to load the audio immediately on page load to catch the error sooner
+        audioPlayer.load();
+
+        // Attach the handlers to the modal buttons to start the alarm/map
+        okModalButton.onclick = startThreatTracking;
+        cancelModalButton.onclick = startThreatTracking;
+
+
+        // Initial setup: ensure button state is correct on load
+        window.onload = () => {
+            checkCoordinates();
+            checkVibrationSupport(); // Check for vibration support on load
+            
+            // Add a resize listener to handle orientation/size changes while the map is visible.
+            window.addEventListener('resize', () => {
+                // Only update dot styles if the result area is visible (i.e., tracking has started)
+                if (!resultArea.classList.contains('hidden')) {
+                    updateDotStyles();
+                }
+            });
+        };
+
+    </script>
+</body>
+</html>
