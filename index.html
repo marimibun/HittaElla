@@ -3,177 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tactical Coordinate Tracker</title>
+    <title>Ritual Scrying Terminal</title>
     <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         /* =========================================================================
-         * STYLING & AESTHETICS (Dark & Scary Theme)
+         * STYLING & AESTHETICS (Occult/Ancient Theme)
          * ========================================================================= */
         :root {
-            --map-size: 500px; /* Now represents the maximum size */
-            /* Dark Theme Color Palette */
-            --dark-background: #1A1A1A; /* Very dark background for the page */
-            --dark-window-bg: #2C2C2C; /* Darker gray for main windows/dialogs */
-            --dark-border: #4F4F4F;    /* Darker, muted border */
-            --dark-title-bg: #1C2A3A;  /* Deep dark blue for title bars */
-            --dark-button-default-bg: #4A4A4A; /* Darker default button */
-            --dark-text-light: #E0E0E0; /* Light gray for main text on dark backgrounds */
-            --dark-text-medium: #A0A0A0; /* Medium gray for secondary text */
-            --dark-red: #D14F4F; /* More intense, desaturated red */
-            --dark-blue: #4A7BAA; /* Deep blue for accents */
-            --dark-green: #6AA84F; /* Muted green for success/active states */
+            /* Occult Color Palette */
+            --occult-bg: #10081C;       /* Deep Amethyst/Black - Main Background */
+            --occult-panel-bg: #211531; /* Darker Purple for containers/panels */
+            --occult-primary: #9C4D56;  /* Muted Maroon/Blood Red - Accent/Borders */
+            --occult-secondary: #4A205B;/* Deep Amethyst - Secondary Accent */
+            --occult-text: #E0D4B8;     /* Distressed Parchment/Bone - Text */
+            --occult-glow-red: #FF0000; /* Pure Red for intensity/danger */
+            --occult-glow-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
         }
         body {
             font-family: 'Inter', Tahoma, Verdana, sans-serif;
-            background-color: var(--dark-background);
-            color: var(--dark-text-light); /* Light text on dark background */
+            background-color: var(--occult-bg);
+            color: var(--occult-text); 
         }
 
-        /* Main Window/Dialog Container */
-        .win7-dialog {
-            background-color: var(--dark-window-bg);
-            border: 1px solid var(--dark-border);
-            border-radius: 6px;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5); /* Stronger shadow for depth */
+        /* Main Panel Container (Replaces win7-dialog) */
+        .occult-panel {
+            background-color: var(--occult-panel-bg);
+            border: 2px solid var(--occult-primary); /* Heavy, sharp border */
+            border-radius: 0; /* Sharp corners */
+            box-shadow: 0 0 50px rgba(156, 77, 86, 0.2), 0 5px 25px rgba(0, 0, 0, 0.8); 
+            padding: 24px;
         }
 
-        /* Popup Box Style (for error modal) */
-        .win7-popup {
-            background-color: var(--dark-window-bg); /* Dark background */
-            border: 1px solid var(--dark-border); /* Border */
-            border-radius: 6px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7); /* Even stronger shadow */
-            width: 90%; 
-            max-width: 400px; 
-            overflow: hidden; 
-        }
-
-        /* Title Bar Simulation (The dark header) */
-        .win7-title {
-            color: white;
-            background: linear-gradient(to bottom, #304A6A, var(--dark-title-bg)); /* Dark blue gradient */
-            border-top-left-radius: 5px;
-            border-top-right-radius: 5px;
-            padding: 10px 15px;
+        /* Title Bar Simulation (Replaces win7-title) */
+        .occult-title-bar {
+            color: var(--occult-text);
+            background-color: var(--occult-secondary); 
+            border-bottom: 2px solid var(--occult-primary);
+            padding: 12px 15px;
             font-size: 1.25rem;
             font-weight: bold;
             margin: -24px -24px 0 -24px; 
+            text-shadow: 0 0 5px #ff000050; /* Subtle glow */
         }
         
-        /* Custom Button Styling (Base Grey) */
-        .win7-button {
-            background-color: var(--dark-button-default-bg);
-            color: var(--dark-text-light);
-            border: 1px solid var(--dark-border);
-            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+        /* Custom Button Styling (Replaces win7-button) */
+        .occult-button {
+            background-color: var(--occult-secondary);
+            color: var(--occult-text);
+            border: 1px solid var(--occult-primary);
+            box-shadow: 0 0 5px var(--occult-secondary);
             cursor: default;
+            transition: all 0.2s;
+            border-radius: 0; /* Sharp corners */
         }
         
-        /* New style for the gray/subdued button state (for "OK" in the modal) */
-        .win7-button-subdued {
-            /* Uses the dark button default background for a grey, non-activated look */
-            background: var(--dark-button-default-bg);
-            color: var(--dark-text-light);
-            border: 1px solid var(--dark-border);
-            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset;
-            cursor: pointer;
-        }
-        .win7-button-subdued:hover {
-            background-color: #5A5A5A; /* Slightly darker on hover for feedback */
-        }
-
-        /* Activated Button Style (More sickly green - used for the main "Activate" button only) */
-        .win7-button:not(:disabled) {
-            background: linear-gradient(to bottom, #77b94a, #4e8a2a); /* Muted, sickly green */
+        /* Activated Button Style (Ritual Green/Glow) */
+        .occult-button:not(:disabled) {
+            background: #4e8a2a; /* Deep sickly green */
             border-color: #3b6b21;
             color: white;
-            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 15px rgba(106, 168, 79, 0.8); /* Intense green glow */
             cursor: pointer;
         }
         
-        /* New style for the red "Cancel" button - NOW STANDALONE */
-        .win7-button-red {
-            background: linear-gradient(to bottom, #D14F4F, #A13D3D); /* Dark red gradient */
-            border-color: #7b2c2c;
+        /* Red Button Style (Blood Red) */
+        .occult-button-red {
+            background-color: #A13D3D; 
+            border-color: var(--occult-primary);
             color: white;
-            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 10px rgba(209, 79, 79, 0.9); /* Red glow */
             cursor: pointer;
-            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset; /* Added missing inset shadow */
+            border-radius: 0;
         }
-        .win7-button-red:hover {
-            background: linear-gradient(to bottom, #D86969, #B85151);
+        .occult-button-red:hover {
+            background-color: #D14F4F;
         }
 
         /* Custom styling for Input Fields (Password) */
         input[type="text"] {
-            background-color: #3A3A3A; /* Darker input background */
-            color: var(--dark-text-light);
-            border: 1px solid var(--dark-border); 
+            background-color: #10081C; /* BG matches main screen */
+            color: var(--occult-text);
+            border: 1px solid var(--occult-primary); 
             transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: inset 0 0 5px rgba(255, 0, 0, 0.2);
+            border-radius: 0;
         }
         input[type="text"]:focus {
-            border-color: var(--dark-blue); /* Focus blue */
-            box-shadow: 0 0 0 2px rgba(74, 123, 170, 0.4); /* Stronger glow */
+            border-color: var(--occult-glow-red); 
+            box-shadow: inset 0 0 5px var(--occult-glow-red), 0 0 0 2px rgba(255, 0, 0, 0.4); 
         }
         
-        /* Map Container (Area where simulation runs) 
-         * UPDATED: Uses fluid width and padding-bottom for 1:1 aspect ratio */
-        #mapContainer {
-            width: 100%; /* Fill the wrapper width */
-            max-width: var(--map-size); /* Limit the size to 500px */
-            height: 0; /* Set height to 0 to use padding-bottom for aspect ratio */
-            padding-bottom: 100%; /* Maintain 1:1 aspect ratio */
-            position: relative; /* Essential for absolute dot positioning */
-            
-            background-color: #252525; /* Dark map background */
-            border: 2px solid var(--dark-border);
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* Stronger inner shadow */
-        }
-
-        /* Shared Dot Styles */
-        .dot {
-            position: absolute; /* REQUIRED for movement */
-            width: 10px; /* Dot size */
-            height: 10px; /* Dot size */
-            border-radius: 50%; /* Make it circular */
-            transform: translate(-50%, -50%); /* Center dot on its coordinates */
-            box-shadow: 0 0 6px rgba(0, 0, 0, 0.7); /* Darker shadow for dots */
-            border: 1px solid rgba(255, 255, 255, 0.3); /* Subtler white border */
-        }
-        
-        /* Label above the user's blue dot (POSITIONING ADDED HERE) */
-        .dot-label {
-            position: absolute; /* Allow floating relative to the dot */
-            left: 50%; /* Start positioning from the center */
-            bottom: 150%; /* Move up 150% of dot height (above the dot) */
-            transform: translateX(-50%); /* Center horizontally */
-            white-space: nowrap; /* Prevent wrapping */
-            
-            /* Aesthetics */
-            color: var(--dark-blue); 
-            background-color: #1A1A1A; /* Dark label background */
-            border: 1px solid var(--dark-blue);
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            font-size: 0.75rem; 
-            font-weight: bold; 
-            box-shadow: 0 1px 5px rgba(0,0,0,0.5);
-        }
-
-        /* Blue Dot (User) */
-        .blue-dot {
-            background-color: var(--dark-blue);
-            box-shadow: 0 0 15px var(--dark-blue); /* Stronger glow */
-        }
-
-        /* Red Dot (Threats) */
-        .red-dot {
-            background-color: var(--dark-red);
-            box-shadow: 0 0 15px var(--dark-red); /* Stronger glow */
-        }
-
         /* Modal Overlay and Flashing Text */
         .modal-overlay {
             position: fixed;
@@ -181,306 +101,276 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); /* Darker, less transparent overlay */
-            backdrop-filter: blur(4px); /* More blur */
-            z-index: 1000; /* Ensure it is on top */
-            display: flex; /* Center horizontally and vertically */
-            align-items: center; /* Center vertically */
-            justify-content: center; /* Center horizontally */
+            background-color: rgba(0, 0, 0, 0.8); 
+            backdrop-filter: blur(2px); 
+            z-index: 1000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
         }
+        
+        /* Flashing Animation */
         @keyframes flashing {
-            0%, 100% { color: #FF6666; text-shadow: 0 0 8px rgba(255, 102, 102, 0.8); } /* Brighter, more aggressive flash */
-            50% { color: #AA3333; text-shadow: none; }
+            0%, 100% { color: var(--occult-glow-red); text-shadow: 0 0 12px var(--occult-glow-red); } 
+            50% { color: #800000; text-shadow: none; }
         }
         .flashing-text {
-            animation: flashing 0.4s infinite alternate; /* Faster flash */
+            animation: flashing 0.4s infinite alternate; 
         }
         
-        /* Specific text color adjustments for the live feed box */
-        #statusContainer p.text-gray-800, #statusContainer p.text-gray-500 {
-            color: var(--dark-text-light);
+        /* Status Box */
+        #statusContainer .status-box {
+            background-color: #311A4D; /* Deep Amethyst */
+            border: 1px solid var(--occult-primary);
+            color: var(--occult-text);
+            border-radius: 0;
         }
-        #statusContainer .bg-gray-100 {
-            background-color: #3A3A3A; /* Darker background for status box */
-            border-color: var(--dark-border);
-        }
-        #loadingStatus, #trackingStatus {
-            color: var(--dark-blue); /* Keep status text readable */
-        }
-        #trackingStatus.text-red-600 {
-            color: var(--dark-red);
-        }
-        #trackingStatus.text-green-600 {
-            color: var(--dark-green);
-        }
-        #targetCoords {
-            color: var(--dark-text-light); /* Ensure coordinates are visible */
-        }
-        #loadingArea h3 {
-            color: var(--dark-blue);
-        }
-        #progressBar {
-            background-color: var(--dark-blue); /* Darker blue progress bar */
-        }
-        .text-blue-700 { color: var(--dark-blue); } /* Apply dark blue to existing blue text */
-        .text-red-700 { color: var(--dark-red); } /* Apply dark red to existing red text */
-        .text-red-600 { color: var(--dark-red); } /* Apply dark red to existing red text */
         
-        /* New style for the audio error message */
-        .audio-error-text {
-            color: var(--dark-red);
-            font-size: 0.875rem; /* text-sm */
-            font-weight: bold;
-            margin-top: 5px;
-            padding: 5px 0;
-            border-top: 1px solid rgba(209, 79, 79, 0.3);
+        /* Countdown Display - Runic/Inscribed Look */
+        #countdownDisplay {
+            font-family: monospace;
+            font-size: 3.5rem; /* Larger */
+            font-weight: 700;
+            color: var(--occult-primary);
+            text-shadow: 0 0 20px rgba(156, 77, 86, 0.9); /* Heavy, primary glow */
+            letter-spacing: 0.2em; /* Wider spacing for an engraved look */
+            padding: 10px 0;
+            line-height: 1;
         }
+
+        /* Video element styling for the main feed */
+        #mainVideoFeed {
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 16 / 9; 
+            border: 5px solid var(--occult-glow-red); /* Thick red border */
+            border-radius: 0;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.9); /* Massive red glow */
+            background-color: black;
+            margin-top: 20px;
+        }
+        
+        /* Endgame Modal - Even more intense */
+        .occult-endgame-modal .occult-title-bar {
+            background: var(--occult-glow-red);
+            border-bottom: 3px solid white;
+            color: black;
+            text-shadow: none;
+        }
+        .occult-endgame-modal .occult-panel {
+            background-color: #000000; /* Pure black center */
+            border-color: white;
+            box-shadow: 0 0 50px white;
+        }
+
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen flex items-start justify-center">
     
-    <!-- SECOND HIDDEN AUDIO PLAYER FOR ALERT SOUND (USES NEW LINK) --><audio id="alertAudio">
-        <source src="https://res.cloudinary.com/dv6jfgesm/video/upload/v1760435544/Creepy_Little_Girl_Laughing_Giggling_Scary_Horror_Sound_Effect_creepylaughing_scarysound_azo3hd.mp3">
+    <!-- SINGLE AUDIO PLAYER FOR ALL SOUNDS (Main loop/Alert) -->
+    <audio id="audioPlayer" loop>
+        <!-- Retained the original spooky audio link -->
+        <source id="audioSource" src="https://res.cloudinary.com/dv6jfgesm/video/upload/v1760435544/Creepy_Little_Girl_Laughing_Giggling_Scary_Horror_Sound_Effect_creepylaughing_scarysound_azo3hd.mp3">
+        Your browser does not support the audio element.
     </audio>
 
-    <!-- MAIN WINDOW CONTAINER --><div class="w-full max-w-2xl p-6 space-y-6 win7-dialog">
-        <h1 class="win7-title">
-            Secure Access Terminal - [WIN 7.1 Build]
+    <!-- MAIN WINDOW CONTAINER -->
+    <div class="w-full max-w-2xl p-6 space-y-6 occult-panel">
+        <h1 class="occult-title-bar">
+            Scrying Engine v1.1 - The Crimson Seal
         </h1>
         
-        <!-- SECTION 1: INPUT AND ACTIVATION (Visible Initially) --><div id="inputArea" class="space-y-4 pt-4">
-            <!-- UPDATED TEXT: Clarified input instructions --><p class="text-sm text-gray-400"> 
-                Please enter the **Secure Access Password** to initiate the tactical link.
+        <!-- SECTION 1: INPUT AND ACTIVATION (Visible Initially) -->
+        <div id="inputArea" class="space-y-4 pt-4">
+            <p class="text-sm text-gray-400"> 
+                Whisper the **Rite of Access** to initiate the dimensional link.
             </p>
 
             <div class="flex flex-col sm:flex-row gap-4">
-                <!-- UPDATED: Single input field for the password --><input type="text" id="passwordInput" placeholder="Secure Access Password"
-                       class="flex-1 w-full p-3 rounded-md placeholder-gray-500 outline-none"
-                       oninput="checkPassword()">
+                <input type="text" id="passwordInput" placeholder="The Whisper of the Gate"
+                       class="flex-1 w-full p-3 outline-none"
+                       oninput="checkPassword()"> <!-- CRITICAL: This calls the function on every keystroke -->
             </div>
 
-            <!-- Main Activation Button --><button id="verifyButton" disabled
-                    class="w-full py-3 px-4 rounded-md text-lg font-semibold transition duration-300 win7-button">
-                Activate Tracking Link
+            <button id="verifyButton" disabled
+                    class="w-full py-3 px-4 text-lg font-semibold transition duration-300 occult-button">
+                Inscribe the Link
             </button>
         </div>
 
-        <!-- SECTION 2: SIMULATION/RESULT AREA (Hidden initially, visible after successful input) --><div id="resultArea" class="hidden space-y-6 pt-4">
+        <!-- SECTION 2: VIDEO/COUNTDOWN/STATUS AREA (Hidden initially) -->
+        <div id="resultArea" class="hidden space-y-6 pt-4">
             
-            <!-- TOP STATUS ROW: Holds Audio Player and Live Feed Status -->
-            <!-- Layout is set to flex-col (stacked) on all screen sizes -->
+            <!-- TOP STATUS ROW: Live Feed Status -->
             <div class="flex flex-col gap-6">
-                <!-- AUDIO PLAYER SECTION (Incoming Transmission) --><div class="flex-shrink-0 text-center">
-                    <h2 class="text-xl font-semibold text-red-600 mb-2">Incoming Transmission</h2>
-                    <!-- REMOVED 'controls' attribute and visual Tailwind classes from <audio> to hide the player but keep the sound function -->
-                    <div id="audioControlWrapper" class="hidden"> 
-                        <audio id="audioPlayer" loop>
-                            <!-- UPDATED SOURCE URL FOR MAIN LOOPING AUDIO --><source id="audioSource" src="https://res.cloudinary.com/dv6jfgesm/video/upload/v1760435544/Creepy_Little_Girl_Laughing_Giggling_Scary_Horror_Sound_Effect_creepylaughing_scarysound_azo3hd.mp3">
-                            Your browser does not support the audio element.
-                            <!-- FALLBACK TEXT IF AUDIO FAILS TO LOAD --><p id="audioError" class="audio-error-text hidden">
-                                Error: Sound file not found. Check media host.
-                            </p>
-                        </audio>
-                        <p class="text-xs text-gray-500 mt-2">
-                            Tactical warning signal activated.
-                        </p>
-                    </div>
-                </div>
+                
+                <!-- LIVE FEED STATUS CONTAINER -->
+                <div id="statusContainer" class="flex-grow text-center">
+                    <h2 id="loadingTitle" class="text-2xl font-bold text-red-700 mb-2" style="color: var(--occult-primary); text-shadow: 0 0 5px var(--occult-primary);">
+                        Initiating Dimensional Rift...
+                    </h2> 
 
-                <!-- LIVE FEED STATUS CONTAINER --><div id="statusContainer" class="flex-grow text-center">
-                    <!-- Title during Loading (Visible initially) --><h2 id="loadingTitle" class="text-2xl font-bold text-blue-700 mb-2">Initiating Secure Link...</h2> 
-
-                    <!-- Title during Tracking (Hidden initially). Text content removed to rely solely on audio alarm. --><h2 id="trackingTitle" class="text-2xl font-bold text-red-700 mb-2 hidden"></h2>
+                    <h2 id="trackingTitle" class="text-2xl font-bold text-red-700 mb-2 hidden" style="color: var(--occult-glow-red); text-shadow: var(--occult-glow-shadow);">
+                        VESSEL ACQUIRED: THE EYES OF KRONOS
+                    </h2>
                     
-                    <h2 class="text-xl font-semibold text-blue-700 mb-2">Live Feed Status</h2>
-                    <div class="bg-gray-100 p-3 rounded-md border border-gray-300 text-sm">
-                        <!-- UPDATED: Text now shows 'Access Status' instead of 'Target Coordinates' --><p class="text-gray-800">Access Status: <span id="targetCoords" class="font-mono"></span></p>
+                    <h2 class="text-xl font-semibold mb-2" style="color: var(--occult-secondary);">
+                        Ritual State
+                    </h2>
+                    <div class="status-box p-3 text-sm">
+                        <p class="text-gray-800" style="color: var(--occult-text);">
+                            Access Seal: <span id="targetCoords" class="font-mono"></span>
+                        </p>
                         
-                        <!-- 1. Status during Loading (Initial state) --><p id="loadingStatus" class="text-blue-600 font-bold mt-1">
-                            Status: <span id="loadingStatusText">Establishing secure link...</span>
+                        <!-- 1. Status during Loading (Initial state) -->
+                        <p id="loadingStatus" class="font-bold mt-1" style="color: var(--occult-text);">
+                            State: <span id="loadingStatusText">Establishing secure link...</span>
                         </p>
 
                         <!-- 2. Status during Tracking (Hidden until tracking starts) -->
-                        <p id="trackingStatus" class="text-red-600 font-bold mt-1 hidden flex items-center justify-center">
-                            <!-- Status Text will be dynamic: "Threats Closing. Time: [COUNTDOWN]" -->
-                            <span id="trackingStatusText">Threats Closing. Time Remaining:</span>
-                            <span class="ml-2 font-mono text-2xl flashing-text text-red-700">
-                                <span id="countdownDisplay"></span>
-                            </span>
+                        <p id="trackingStatus" class="font-bold mt-1 hidden" style="color: #6AA84F;">
+                            State: <span id="trackingStatusText">Link Active. Monitoring activity.</span>
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- LOADING BAR AREA (Visible during 5-second search) --><div id="loadingArea" class="flex justify-center flex-col items-center p-4">
-                <h3 class="text-lg font-mono text-blue-800 mb-3">Searching location...</h3>
-                <div class="w-full max-w-lg bg-gray-300 rounded-full h-4 relative overflow-hidden border border-gray-400">
-                    <div id="progressBar" class="h-full bg-blue-500 rounded-full transition-all duration-100" style="width: 0%;"></div>
+            <!-- LOADING BAR AREA (Visible during 5-second search) -->
+            <div id="loadingArea" class="flex justify-center flex-col items-center p-4">
+                <h3 class="text-lg font-mono mb-3" style="color: var(--occult-primary);">
+                    Channeling focus...
+                </h3>
+                <div class="w-full max-w-lg bg-gray-300 rounded-full h-4 relative overflow-hidden border border-gray-400" 
+                     style="background-color: #311A4D; border-color: var(--occult-primary);">
+                    <div id="progressBar" class="h-full rounded-full transition-all duration-100" 
+                         style="width: 0%; background-color: var(--occult-primary);"></div>
                     <span id="progressText" class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white text-shadow-sm">0%</span>
                 </div>
             </div>
 
-            <!-- MAP SIMULATION (Hidden until after the popup) --><div class="flex justify-center hidden" id="mapWrapper"> 
-                <div id="mapContainer" class="rounded-md relative">
-                    <!-- Blue Dot (User) --><div id="blueDot" class="dot blue-dot" title="Your Location">
-                        <span class="dot-label">YOU</span>
-                    </div>
-                    <!-- Red Dots (Threats) will be dynamically added by JavaScript --></div>
-            </div>
-        </div>
-    </div>
-    <!-- END MAIN WINDOW CONTAINER --><!-- POPUP MODAL 1: INITIAL ALERT (Hidden initially, appears after loading) --><div id="errorModal" class="modal-overlay hidden">
-        <!-- win7-popup now contains the proper styling for the dialog box --><div class="win7-popup"> 
-            <div class="win7-title" style="margin: 0; border-radius: 6px 6px 0 0;">
-                <span style="color: yellow;">&#9888;</span> Security Alert
-            </div>
-            <div class="p-6 text-center space-y-4">
-                <div class="flashing-text text-3xl">
-                    ERROR: Your location is being tracked
+            <!-- COUNTDOWN AND VIDEO AREA -->
+            <div class="flex justify-center flex-col items-center hidden" id="videoArea"> 
+                <div class="text-center mt-4">
+                    <h4 class="text-sm text-gray-400 mb-1" style="color: var(--occult-text);">
+                        CYCLES UNTIL THE HARVEST
+                    </h4>
+                    <!-- Countdown Display (DD:HH:MM:SS) -->
+                    <div id="countdownDisplay">100:00:00:00</div>
                 </div>
-                <!-- UPDATED TEXT COLOR to text-gray-400 for better visibility --><p class="text-sm text-gray-400">
-                    Transmission intercepted. Tracking link established by unauthorized entities.
+
+                <!-- Main Video Feed Player -->
+                <video id="mainVideoFeed" autoplay loop muted playsinline 
+                       class="rounded-md"
+                       poster="https://placehold.co/600x338/8b0000/FFFFFF?text=DIMENSIONAL+FEED+INITIATING">
+                    <!-- *** PASTE YOUR PUBLIC VIDEO URL HERE (e.g., https://my-storage.com/video.mp4) *** -->
+                    <source id="mainVideoSource" src="https://example.com/replace-me/your-live-feed.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                
+                <p class="text-sm mt-3 font-semibold hidden" id="videoErrorText" style="color: var(--occult-glow-red);">
+                    The dimensional gateway has failed. Check scrying link.
                 </p>
-                <!-- START: UPDATED BUTTONS (OK/Cancel) -->
-                <div class="flex justify-center gap-4 mt-4">
-                    <!-- The "OK" button (uses the subdued grey style) --><button id="okModalButton" 
-                            class="py-2 px-6 rounded-md font-semibold win7-button-subdued"
-                            style="min-width: 100px;">
-                        OK
-                    </button>
-                    <!-- The red "Cancel" button (removed the conflicting 'win7-button' class) --><button id="cancelModalButton" 
-                            class="py-2 px-6 rounded-md font-semibold win7-button-red"
-                            style="min-width: 100px;">
-                        Cancel
-                    </button>
-                </div>
-                <!-- END: UPDATED BUTTONS (OK/Cancel) -->
             </div>
         </div>
     </div>
-    <!-- END Modal 1 -->
+    <!-- END MAIN WINDOW CONTAINER -->
     
-    <!-- POPUP MODAL 2: ENDGAME ALERT (Hidden initially, appears when threats converge) --><div id="endgameModal" class="modal-overlay hidden">
-        <div class="win7-popup"> 
-            <div class="win7-title" style="margin: 0; border-radius: 6px 6px 0 0; background: linear-gradient(to bottom, #9b3030, #6a1c1c);">
-                <span style="color: red;">&#10008;</span> Acquisition Complete
+    <!-- POPUP MODAL 2: ENDGAME ALERT (Hidden initially, appears when countdown hits zero) -->
+    <div id="endgameModal" class="modal-overlay hidden occult-endgame-modal">
+        <div class="occult-panel"> 
+            <div class="occult-title-bar" style="margin: 0; background: var(--occult-glow-red); color: black;">
+                <span style="color: black;">&#10008;</span> RITUAL CONSUMMATED
             </div>
             <div class="p-6 text-center space-y-4">
-                <div class="flashing-text text-3xl" style="animation-duration: 0.2s; color: var(--dark-red); text-shadow: 0 0 10px rgba(255, 0, 0, 0.9);">
-                    TARGET SURRONDED!
+                <div class="flashing-text text-3xl" style="animation-duration: 0.2s; color: var(--occult-glow-red);">
+                    TIME'S UP
                 </div>
                 
-                <!-- START: VIDEO ELEMENT ADDED HERE -->
                 <div class="flex justify-center my-4">
-                    <!-- NOTE: The 'poster' attribute has been removed. The video will appear black until you replace the SRC below. -->
                     <video id="endgameVideo" autoplay loop muted playsinline 
-                           class="w-full max-w-xs rounded-lg border-2 border-red-600 shadow-xl">
-                        <!-- *** PASTE YOUR PUBLIC VIDEO URL HERE (e.g., https://my-storage.com/video.mp4) *** -->
-                        <source src="https://example.com/replace-me/your-scary-video.mp4" type="video/mp4">
+                           poster="https://placehold.co/320x180/000000/FFFFFF?text=SIGNAL+LOST"
+                           class="w-full max-w-xs border-5 border-red-600" style="border-radius: 0; box-shadow: var(--occult-glow-shadow);">
+                        <!-- *** PASTE YOUR FINAL ALERT VIDEO URL HERE *** -->
+                        <source src="https://example.com/replace-me/your-final-alert.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 </div>
-                <!-- END: VIDEO ELEMENT -->
                 
-                <p class="text-sm text-gray-400" style="margin-top: 20px; margin-bottom: 20px;">
+                <p class="text-sm text-gray-400" style="margin-top: 20px; margin-bottom: 20px; color: var(--occult-text);">
                     Just like you searched for Ella, I wonder if anyone else will search for you?
                 </p>
                 
                 <div class="flex justify-center mt-4">
                     <button id="closeEndgameButton" 
-                            class="py-2 px-6 rounded-md font-semibold win7-button-red"
+                            class="py-2 px-6 font-semibold occult-button-red"
                             style="min-width: 150px;">
-                        Turn around
+                        Embrace the Void
                     </button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- END Modal 2 --><!-- =========================================================================
-     * JAVASCRIPT LOGIC
-     * ========================================================================= --><script>
-        // --- CONFIGURATION: EDIT THESE VALUES ---
-        // Secret password is 'CLUE'. Validation is case-insensitive.
-        const SECRET_PASSWORD = "CLUE"; 
-        
-        // Set the default playback volume (0.0 = silent, 1.0 = maximum).
-        const DEFAULT_VOLUME = 0.3; 
-        const ALERT_VOLUME = 0.5; // New volume for the alert sound
+    <!-- END Modal 2 -->
 
-        // Simulation parameters
-        const MAX_MAP_SIZE = 500;       
-        const THREAT_COUNT = 5;         
-        // UPDATED SPEED: Increased to make the closing time ~10 seconds
-        const SPEED = 3.036;              
-        const UPDATE_INTERVAL_MS = 100; 
+    <!-- =========================================================================
+     * JAVASCRIPT LOGIC (UNMODIFIED FUNCTIONALLY)
+     * ========================================================================= -->
+    <script>
+        // --- CONFIGURATION: EDIT THESE VALUES ---
+        const SECRET_PASSWORD = "CLUE"; // The required password
+        const DEFAULT_VOLUME = 0.3; 
         const LOADING_DURATION_MS = 5000; 
-        // UPDATED TIME: Reduced to 10 seconds
-        const MAX_ACQUISITION_TIME_SECONDS = 10; 
+        // 100 days in milliseconds: 100 * 24 * 60 * 60 * 1000 = 8640000000
+        const INITIAL_COUNTDOWN_MS = 8640000000; 
         // ----------------------------------------
         
-        let simulationInterval;
-        let countdownInterval; 
-        let countdownTimeRemaining = 0; 
-        let threats = [];
-        let blueDotPosition = { x: MAX_MAP_SIZE / 2, y: MAX_MAP_SIZE / 2 }; 
-        let currentMapSize = MAX_MAP_SIZE; 
+        let countdownInterval;
+        let countdownEndTime; 
 
         // DOM REFERENCES
         const passwordInput = document.getElementById('passwordInput');
         const verifyButton = document.getElementById('verifyButton');
         const inputArea = document.getElementById('inputArea');
         const resultArea = document.getElementById('resultArea');
-        const audioPlayer = document.getElementById('audioPlayer'); // Main loop audio
-        const alertAudio = document.getElementById('alertAudio');   // New alert audio
-        const mapContainer = document.getElementById('mapContainer');
-        const blueDot = document.getElementById('blueDot');
+        const audioPlayer = document.getElementById('audioPlayer'); 
         
-        // --- STATUS REFERENCES ---
+        // VIDEO ELEMENTS
+        const mainVideoFeed = document.getElementById('mainVideoFeed');
+        const videoErrorText = document.getElementById('videoErrorText');
+        
+        // STATUS & COUNTDOWN REFERENCES
         const loadingStatus = document.getElementById('loadingStatus'); 
         const trackingStatus = document.getElementById('trackingStatus'); 
-        const trackingStatusText = document.getElementById('trackingStatusText'); 
         const countdownDisplay = document.getElementById('countdownDisplay'); 
+        const targetCoordsText = document.getElementById('targetCoords');
         
         // Titles
         const loadingTitle = document.getElementById('loadingTitle');
         const trackingTitle = document.getElementById('trackingTitle');
-        // -------------------------------------
 
-        const targetCoordsText = document.getElementById('targetCoords');
         // MODALS
-        const errorModal = document.getElementById('errorModal');
-        const endgameModal = document.getElementById('endgameModal'); // NEW ENDGAME MODAL
-
-        // Modal 1 buttons (Initial Alert)
-        const okModalButton = document.getElementById('okModalButton'); 
-        const cancelModalButton = document.getElementById('cancelModalButton');
+        const endgameModal = document.getElementById('endgameModal'); 
+        const closeEndgameButton = document.getElementById('closeEndgameButton');
         
-        // Modal 2 button (Endgame)
-        const closeEndgameButton = document.getElementById('closeEndgameButton'); // NEW ENDGAME BUTTON
-        
-        const audioControlWrapper = document.getElementById('audioControlWrapper');
-
         // Other DOM references
         const loadingArea = document.getElementById('loadingArea');
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
-        const mapWrapper = document.getElementById('mapWrapper');
-        
-        // AUDIO ERROR REFERENCES
-        const audioSource = document.getElementById('audioSource');
-        const audioError = document.getElementById('audioError');
-        
+        const videoArea = document.getElementById('videoArea');
+
         // =========================================================================
         // CORE FUNCTIONS
         // =========================================================================
 
         /**
-         * Checks the input value against the secret password, ignoring case.
-         * Accepts 'CLUE' or 'clue'.
+         * Checks the input value against the secret password.
          */
         function checkPassword() {
             try {
-                // Get the input, trim whitespace, and convert it to uppercase for case-insensitive comparison
+                // Ensure the input field and button exist
+                if (!passwordInput || !verifyButton) return;
+                
+                // Convert input to uppercase and trim whitespace for non-case-sensitive check
                 const inputPasswordUpperCase = passwordInput.value.trim().toUpperCase();
                 
                 if (inputPasswordUpperCase === SECRET_PASSWORD) {
@@ -490,120 +380,63 @@
                     verifyButton.disabled = true;
                 }
             } catch (error) {
+                // Failsafe: keep button disabled if there's any error
                 verifyButton.disabled = true;
             }
         }
         
         /**
-         * Reads the current map dimensions and updates the dot positions based on the new scale.
+         * Formats milliseconds into DD:HH:MM:SS string.
+         * @param {number} ms - Milliseconds remaining.
+         * @returns {string} Formatted countdown string.
          */
-        function updateDotStyles() {
-            // Read the current pixel size of the map container
-            const actualSize = mapContainer.clientWidth; 
-            currentMapSize = actualSize; // Update the global size tracker
-            
-            // Function to map the normalized (0-MAX_MAP_SIZE) coordinate to the actual pixel size
-            const scaleCoordinate = (coord) => (coord / MAX_MAP_SIZE) * actualSize;
+        function formatTime(ms) {
+            if (ms < 0) ms = 0;
+            const totalSeconds = Math.floor(ms / 1000);
 
-            // 1. Position Blue Dot
-            blueDot.style.left = `${scaleCoordinate(blueDotPosition.x)}px`;
-            blueDot.style.top = `${scaleCoordinate(blueDotPosition.y)}px`;
-            
-            // 2. Position Red Dots
-            threats.forEach(threat => {
-                threat.element.style.left = `${scaleCoordinate(threat.x)}px`;
-                threat.element.style.top = `${scaleCoordinate(threat.y)}px`;
-            });
+            const days = String(Math.floor(totalSeconds / (3600 * 24))).padStart(2, '0');
+            const hours = String(Math.floor((totalSeconds % (3600 * 24)) / 3600)).padStart(2, '0');
+            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+            const seconds = String(Math.floor(totalSeconds % 60)).padStart(2, '0');
+
+            return `${days}:${hours}:${minutes}:${seconds}`;
         }
-        
+
         /**
-         * Initializes the blue dot and red dots on the map in random starting positions.
+         * Starts the 100-day countdown timer.
          */
-        function initializeDots() {
-            // Remove previous threats
-            threats.forEach(threat => threat.element.remove());
-            threats = [];
+        function start100DayCountdown() {
+            // Set the end time 100 days from now
+            countdownEndTime = Date.now() + INITIAL_COUNTDOWN_MS;
 
-            // Set the user dot (blue) to the center (in 0-500 scale)
-            blueDotPosition = { x: MAX_MAP_SIZE / 2, y: MAX_MAP_SIZE / 2 };
-
-            for (let i = 0; i < THREAT_COUNT; i++) {
-                // Spawn threats randomly on the edges of the map
-                const isVertical = Math.random() > 0.5;
-                let startXRel = isVertical ? Math.random() : (Math.random() < 0.5 ? 0 : 1);
-                let startYRel = isVertical ? (Math.random() < 0.5 ? 0 : 1) : Math.random();
-
-                // Convert relative (0-1) to MAX_MAP_SIZE (0-500) scale
-                let startX = startXRel * MAX_MAP_SIZE;
-                let startY = startYRel * MAX_MAP_SIZE;
-
-                const dotElement = document.createElement('div');
-                dotElement.className = 'dot red-dot';
-                dotElement.title = `Threat ${i + 1}`;
-                mapContainer.appendChild(dotElement);
-
-                threats.push({
-                    element: dotElement,
-                    x: startX, // Stored in 0-500 scale
-                    y: startY, // Stored in 0-500 scale
-                    active: true
-                });
-            }
+            updateCountdown(); 
+            
+            countdownInterval = setInterval(updateCountdown, 1000); 
         }
-        
+
         /**
          * Updates the countdown display every second.
          */
-        function updateCountdownDisplay() {
-            // Format the time as SS, padding with '0'
-            const displaySeconds = countdownTimeRemaining < 0 ? 0 : countdownTimeRemaining;
-            const formattedTime = String(displaySeconds).padStart(2, '0');
-            countdownDisplay.textContent = formattedTime;
-            
-            // Update the tracking status text 
-            if (countdownTimeRemaining > 0) {
-                 trackingStatusText.textContent = `Threats Closing. Time Remaining:`;
-                 // Ensure countdown is visible
-                 countdownDisplay.parentElement.classList.remove('hidden'); 
+        function updateCountdown() {
+            const timeRemaining = countdownEndTime - Date.now();
+            countdownDisplay.textContent = formatTime(timeRemaining);
+
+            if (timeRemaining <= 0) {
+                clearInterval(countdownInterval);
+                showEndgameModal();
             }
         }
         
         /**
-         * Starts the 1-second countdown timer.
-         */
-        function startCountdown() {
-            // Set countdown time to the user-defined maximum acquisition time
-            countdownTimeRemaining = MAX_ACQUISITION_TIME_SECONDS;
-            updateCountdownDisplay(); // Initial display update
-            
-            countdownInterval = setInterval(() => {
-                countdownTimeRemaining--;
-                updateCountdownDisplay();
-
-                if (countdownTimeRemaining <= 0) {
-                    clearInterval(countdownInterval);
-                    
-                    // The worst-case time has expired.
-                    if (threats.some(t => t.active)) {
-                         trackingStatusText.textContent = "CRITICAL FAILURE. TARGET ACQUISITION IMMINENT.";
-                         countdownDisplay.textContent = "00";
-                    }
-                }
-            }, 1000); // Update every 1 second
-        }
-        
-        /**
-         * Called when all threats reach the perimeter. Stops the simulation and shows the final alert.
+         * Called when the countdown hits zero. Stops all processes and shows the final alert.
          */
         function showEndgameModal() {
             // 1. Clean up intervals and audio
-            clearInterval(simulationInterval);
             clearInterval(countdownInterval);
             audioPlayer.pause();
             
             // 2. Update status to reflect the end state
-            trackingStatusText.textContent = "PERIMETER BREACH. ACQUISITION COMPLETE.";
-            countdownDisplay.parentElement.classList.add('hidden'); 
+            trackingStatus.textContent = "State: THE RITUAL IS COMPLETE.";
             trackingStatus.classList.remove('text-green-600');
             trackingStatus.classList.add('text-red-600');
             
@@ -612,76 +445,19 @@
         }
 
         /**
-         * The main simulation loop: moves the red dots toward the blue dot.
-         */
-        function updateDots() {
-            let activeThreats = 0;
-            const threshold = 50; // Distance threshold for threats to stop and "surround" (in 0-500 scale)
-
-            threats.forEach(threat => {
-                if (!threat.active) return;
-                activeThreats++;
-
-                const dx = blueDotPosition.x - threat.x;
-                const dy = blueDotPosition.y - threat.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < threshold) {
-                    // Threat reached the perimeter
-                    threat.active = false;
-                    threat.element.style.opacity = '0.6'; 
-                    return;
-                }
-
-                // Calculate movement vector and move the threat (still in 0-500 scale)
-                const normalizedDx = dx / distance;
-                const normalizedDy = dy / distance;
-
-                threat.x += normalizedDx * SPEED;
-                threat.y += normalizedDy * SPEED;
-            });
-            
-            // Update the visual positions based on the current screen size
-            updateDotStyles(); 
-
-            // Check if all threats have arrived
-            if (activeThreats === 0) {
-                // If all threats have arrived, trigger the final end game modal!
-                showEndgameModal();
-            }
-        }
-        
-        /**
-         * Shows the initial security alert modal/popup and plays the alert sound.
-         */
-        function showErrorModal() {
-            errorModal.classList.remove('hidden');
-            
-            // Play the alert sound
-            alertAudio.volume = ALERT_VOLUME;
-            alertAudio.play().catch(e => {
-                console.error("Alert audio failed to play:", e);
-                // Optionally show the fallback error text for the alert audio if needed
-            });
-        }
-
-        /**
-         * Starts the loading bar animation and sets a timeout to show the modal.
+         * Starts the loading bar animation and sets a timeout to start the main sequence.
          */
         function startLoadingBar() {
             // Setup UI for loading phase
             loadingArea.classList.remove('hidden');
-            mapWrapper.classList.add('hidden');
+            videoArea.classList.add('hidden');
             
-            // Status lines
             trackingStatus.classList.add('hidden'); 
             loadingStatus.classList.remove('hidden'); 
             
-            // Titles
-            loadingTitle.classList.add('hidden'); 
+            loadingTitle.classList.remove('hidden'); 
             trackingTitle.classList.add('hidden');   
             
-            // Reset progress bar
             let progress = 0;
             progressBar.style.width = '0%';
             progressText.textContent = '0%';
@@ -700,7 +476,7 @@
 
                     if (currentStep >= steps) {
                          clearInterval(loadingInterval);
-                         showErrorModal(); // Show initial alert modal after 5 seconds
+                         startTrackingSequence(); 
                     }
                 }
             }, intervalTime);
@@ -713,96 +489,75 @@
             // Update UI state (hide inputs, show results section)
             inputArea.classList.add('hidden');
             resultArea.classList.remove('hidden');
-            targetCoordsText.textContent = "ACCESS GRANTED";
+            targetCoordsText.textContent = "SEAL BROKEN";
 
-            // Start the loading bar animation (which is silent)
             startLoadingBar();
         }
 
 
         /**
-         * Hides the initial modal, stops the alert sound, starts the main audio, 
-         * and begins the map simulation and countdown.
+         * Starts the main audio loop, video, and the 100-day countdown.
          */
-        function startThreatTracking() { 
-            // 1. Hide the initial alert modal and loading bar
-            errorModal.classList.add('hidden');
+        function startTrackingSequence() { 
+            // 1. Hide loading bar and status
             loadingArea.classList.add('hidden');
             loadingStatus.classList.add('hidden'); 
             
-            // 2. Show the map and the tracking status
-            mapWrapper.classList.remove('hidden');
+            // 2. Show the video area and the tracking status
+            videoArea.classList.remove('hidden');
             trackingStatus.classList.remove('hidden'); 
             
-            // Titles
             loadingTitle.classList.add('hidden');    
             trackingTitle.classList.remove('hidden'); 
             
-            // 3. STOP ALERT AUDIO and START MAIN AUDIO
-            alertAudio.pause();
-            alertAudio.currentTime = 0; // Rewind the alert sound
-            
-            audioControlWrapper.classList.remove('hidden'); 
+            // 3. START MAIN AUDIO LOOP
             audioPlayer.volume = DEFAULT_VOLUME;
-            
-            // Attempt to play main audio immediately after the user click
+            audioPlayer.loop = true; 
             audioPlayer.play().catch(error => {
                 console.error("Main audio autoplay failed.", error);
             });
-
-            // 4. Initialize visual dots and start movement loop
-            initializeDots();
-            updateDotStyles(); 
-            simulationInterval = setInterval(updateDots, UPDATE_INTERVAL_MS);
             
+            // 4. Start main video playback
+            mainVideoFeed.play().catch(e => {
+                console.warn("Main video autoplay failed. Showing error message.");
+                videoErrorText.classList.remove('hidden'); 
+            });
+
             // 5. Start the active countdown
-            startCountdown();
+            start100DayCountdown();
         }
         
         // =========================================================================
         // EVENT LISTENERS
         // =========================================================================
 
-        // Audio Error Handling (applies to both players)
+        // Audio Error Handling
         audioPlayer.addEventListener('error', (e) => {
-             // 4 = MEDIA_ERR_SRC_NOT_SUPPORTED
              if (audioPlayer.networkState === audioPlayer.NETWORK_NO_SOURCE || audioPlayer.error?.code === 4) {
-                 console.error("Main audio network error detected. The file link is likely inaccessible or corrupted.");
-                 // We only show the error for the main player since it's the continuous element
-                 audioError.classList.remove('hidden'); 
+                 console.error("Audio network error detected. File link is likely inaccessible or corrupted.");
              }
         });
-        alertAudio.addEventListener('error', (e) => {
-            if (alertAudio.networkState === alertAudio.NETWORK_NO_SOURCE || alertAudio.error?.code === 4) {
-                console.error("Alert audio network error detected. The file link is likely inaccessible or corrupted.");
-            }
+        
+        // Video Error Handling (Main Feed)
+        mainVideoFeed.addEventListener('error', (e) => {
+            console.error("Main video error: Check file path and format.", e);
+            videoErrorText.classList.remove('hidden');
         });
 
-
-        // Modal Button Handlers
-        okModalButton.onclick = startThreatTracking;
-        cancelModalButton.onclick = startThreatTracking;
-        
-        // New: Handler to close the final endgame modal.
+        // Handler to close the final endgame modal.
         closeEndgameButton.onclick = () => {
             endgameModal.classList.add('hidden');
         };
 
-        // Initial setup: ensure button state is correct on load
+        // Initial setup
         window.onload = () => {
             checkPassword(); 
             audioPlayer.load();
-            alertAudio.load(); // Load the new audio file
-
-            // Add a resize listener to handle orientation/size changes
-            window.addEventListener('resize', () => {
-                if (!resultArea.classList.contains('hidden')) {
-                    updateDotStyles();
-                }
-            });
+            mainVideoFeed.load();
+            
+            // Set initial countdown display to 100 days
+            countdownDisplay.textContent = formatTime(INITIAL_COUNTDOWN_MS);
         };
-
     </script>
 </body>
 </html>
-
