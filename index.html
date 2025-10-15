@@ -105,15 +105,15 @@
             background: linear-gradient(to bottom, #D86969, #B85151);
         }
 
-        /* Custom styling for Input Fields (Latitude/Longitude) */
-        input[type="number"] {
+        /* Custom styling for Input Fields (Password) */
+        input[type="text"] {
             background-color: #3A3A3A; /* Darker input background */
             color: var(--dark-text-light);
             border: 1px solid var(--dark-border); 
             transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
         }
-        input[type="number"]:focus {
+        input[type="text"]:focus {
             border-color: var(--dark-blue); /* Focus blue */
             box-shadow: 0 0 0 2px rgba(74, 123, 170, 0.4); /* Stronger glow */
         }
@@ -245,17 +245,14 @@
         </h1>
         
         <!-- SECTION 1: INPUT AND ACTIVATION (Visible Initially) --><div id="inputArea" class="space-y-4 pt-4">
-            <!-- UPDATED TEXT COLOR to text-gray-400 for better visibility --><p class="text-sm text-gray-400"> 
-                Please enter the required coordinates to access the tactical link.
+            <!-- UPDATED TEXT: Clarified input instructions --><p class="text-sm text-gray-400"> 
+                Please enter the **Secure Access Password** to initiate the tactical link.
             </p>
 
             <div class="flex flex-col sm:flex-row gap-4">
-                <!-- Latitude Input Field - Placeholder provides the "Latitude" label --><input type="number" step="any" id="latInput" placeholder="Latitude"
-                       class="flex-1 p-3 rounded-md placeholder-gray-500 outline-none"
-                       oninput="checkCoordinates()">
-                <!-- Longitude Input Field - Placeholder provides the "Longitude" label --><input type="number" step="any" id="lonInput" placeholder="Longitude"
-                       class="flex-1 p-3 rounded-md placeholder-gray-500 outline-none"
-                       oninput="checkCoordinates()">
+                <!-- UPDATED: Single input field for the password --><input type="text" id="passwordInput" placeholder="Secure Access Password"
+                       class="flex-1 w-full p-3 rounded-md placeholder-gray-500 outline-none"
+                       oninput="checkPassword()">
             </div>
 
             <!-- Main Activation Button --><button id="verifyButton" disabled
@@ -293,7 +290,7 @@
                     
                     <h2 class="text-xl font-semibold text-blue-700 mb-2">Live Feed Status</h2>
                     <div class="bg-gray-100 p-3 rounded-md border border-gray-300 text-sm">
-                        <p class="text-gray-800">Target Coordinates: <span id="targetCoords" class="font-mono"></span></p>
+                        <!-- UPDATED: Text now shows 'Access Status' instead of 'Target Coordinates' --><p class="text-gray-800">Access Status: <span id="targetCoords" class="font-mono"></span></p>
                         
                         <!-- 1. Status during Loading (Initial state) --><p id="loadingStatus" class="text-blue-600 font-bold mt-1">
                             Status: <span id="loadingStatusText">Establishing secure link...</span>
@@ -339,8 +336,8 @@
                 </div>
                 
                 <!-- START: ADDED GIF/Image Placeholder for the Popup --><img id="modalGif" 
-                     src="https://placehold.co/180x180/8b0000/FFFFFF?text=!!+ALERT+!!" 
-                     alt="Security Alert Graphic" 
+                     src="https://placehold.co/180x180/8b0000/FFFFFF?text=INSERT VIDEO HERE LATER" 
+                     alt="INSERT VIDEO HERE LATER" 
                      class="mx-auto w-48 h-48 rounded-lg border-2 border-red-600 shadow-xl"
                      style="margin-top: 10px; margin-bottom: 10px; opacity: 0.9;"
                      onerror="this.src='https://placehold.co/180x180/8b0000/FFFFFF?text=!!+ALERT+!!'">
@@ -369,36 +366,33 @@
      * JAVASCRIPT LOGIC
      * ========================================================================= --><script>
         // --- CONFIGURATION: EDIT THESE VALUES ---
-        // Change the fixed Latitude value here to set the required input coordinate.
-        const SECRET_LAT = 59.4071365; 
-        // Change the fixed Longitude value here to set the required input coordinate.
-        const SECRET_LON = 13.5783658; 
+        // Secret password is 'CLUE'. Validation is case-insensitive.
+        const SECRET_PASSWORD = "CLUE"; 
+        
         // Set the default playback volume (0.0 = silent, 1.0 = maximum).
-        const DEFAULT_VOLUME = 1.0; // Defaulting to 30% volume
+        const DEFAULT_VOLUME = 1.0; 
 
         // Simulation parameters
-        const MAX_MAP_SIZE = 500;       // Defines the maximum size (W x H) and the coordinate system scale (0-500)
-        const THREAT_COUNT = 5;         // Number of hostile dots
-        // UPDATED SPEED: This speed ensures the farthest-spawning threat reaches the 50-unit threshold in exactly 50 seconds.
-        // Calculation: (Max Distance - Threshold) / (Time * FPS) = (353.55 - 50) / (50 * 10) ≈ 0.607 units/frame
-        const SPEED = 0.607;              
-        const UPDATE_INTERVAL_MS = 100; // Simulation update rate (10 FPS)
-        const LOADING_DURATION_MS = 5000; // Duration of the loading bar in milliseconds (5 seconds)
-        
-        // USER OVERRIDE: Setting fixed time to 50 seconds.
-        const MAX_ACQUISITION_TIME_SECONDS = 50; 
+        const MAX_MAP_SIZE = 500;       
+        const THREAT_COUNT = 5;         
+        // UPDATED SPEED: Increased to make the closing time ~30 seconds (was 0.607 for ~50s)
+        const SPEED = 1.012;              
+        const UPDATE_INTERVAL_MS = 100; 
+        const LOADING_DURATION_MS = 5000; 
+        // UPDATED TIME: Reduced from 50 to 30 seconds
+        const MAX_ACQUISITION_TIME_SECONDS = 30; 
         // ----------------------------------------
         
         let simulationInterval;
-        let countdownInterval; // Interval for the 1-second countdown
-        let countdownTimeRemaining = 0; // Current time remaining
+        let countdownInterval; 
+        let countdownTimeRemaining = 0; 
         let threats = [];
         let blueDotPosition = { x: MAX_MAP_SIZE / 2, y: MAX_MAP_SIZE / 2 }; 
-        let currentMapSize = MAX_MAP_SIZE; // Will hold the current actual pixel width of the map container
+        let currentMapSize = MAX_MAP_SIZE; 
 
         // DOM REFERENCES
-        const latInput = document.getElementById('latInput');
-        const lonInput = document.getElementById('lonInput');
+        // UPDATED: Now referencing the single password input
+        const passwordInput = document.getElementById('passwordInput');
         const verifyButton = document.getElementById('verifyButton');
         const inputArea = document.getElementById('inputArea');
         const resultArea = document.getElementById('resultArea');
@@ -435,21 +429,15 @@
         const audioError = document.getElementById('audioError');
 
         /**
-         * Checks the input values against the secret coordinates.
+         * Checks the input value against the secret password, ignoring case.
          * Enables/disables the button based on the match.
          */
-        function checkCoordinates() {
+        function checkPassword() {
             try {
-                // Use fixed-point arithmetic for accurate floating point comparison
-                const inputLat = parseFloat(latInput.value).toFixed(7);
-                const secretLat = SECRET_LAT.toFixed(7);
-                const inputLon = parseFloat(lonInput.value).toFixed(7);
-                const secretLon = SECRET_LON.toFixed(7);
-
-                const isLatMatch = inputLat === secretLat;
-                const isLonMatch = inputLon === secretLon;
-
-                if (isLatMatch && isLonMatch) {
+                // Get the input, trim whitespace, and convert it to uppercase for case-insensitive comparison
+                const inputPasswordUpperCase = passwordInput.value.trim().toUpperCase();
+                
+                if (inputPasswordUpperCase === SECRET_PASSWORD) {
                     verifyButton.disabled = false;
                     verifyButton.onclick = triggerInitialActivation; 
                 } else {
@@ -462,7 +450,6 @@
         
         /**
          * Reads the current map dimensions and updates the dot positions based on the new scale.
-         * This ensures responsiveness on window resize or small screens.
          */
         function updateDotStyles() {
             // Read the current pixel size of the map container
@@ -485,7 +472,6 @@
         
         /**
          * Initializes the blue dot and red dots on the map in random starting positions.
-         * Note: All coordinate logic happens in the MAX_MAP_SIZE (500) scale.
          */
         function initializeDots() {
             // Remove previous threats
@@ -540,7 +526,7 @@
          * Starts the 1-second countdown timer.
          */
         function startCountdown() {
-            // Set countdown time to the user-defined maximum acquisition time (now 50 seconds)
+            // Set countdown time to the user-defined maximum acquisition time
             countdownTimeRemaining = MAX_ACQUISITION_TIME_SECONDS;
             updateCountdownDisplay(); // Initial display update
             
@@ -554,7 +540,6 @@
                     // Check if threats are still active when the timer hits zero
                     if (threats.some(t => t.active)) {
                          // The worst-case time has expired, but the threats are still active 
-                         // (e.g., they haven't finished the movement loop yet)
                          trackingStatusText.textContent = "CRITICAL FAILURE. TARGET ACQUISITION IMMINENT.";
                          countdownDisplay.textContent = "00";
                     }
@@ -583,7 +568,6 @@
                     threat.active = false;
                     // Slightly reduce opacity and movement speed for visual confirmation
                     threat.element.style.opacity = '0.6'; 
-                    // No need to update trackingStatusText here, let the countdown handle the main status.
                     return;
                 }
 
@@ -601,15 +585,12 @@
             // Check if all threats have arrived
             if (activeThreats === 0) {
                 clearInterval(simulationInterval);
-                // Stop the countdown if threats are secured early
                 clearInterval(countdownInterval);
                 audioPlayer.pause();
                 trackingStatusText.textContent = "PERIMETER SECURED. ALL HOSTILE ENTITIES ARE STATIONARY.";
                 countdownDisplay.parentElement.classList.add('hidden'); // Hide countdown
                 trackingStatus.classList.remove('text-red-600');
                 trackingStatus.classList.add('text-green-600');
-            } else {
-                // Tracking status text updates handled by startCountdown/updateCountdownDisplay
             }
         }
         
@@ -662,13 +643,14 @@
         }
 
         /**
-         * Initiates the sequence after the correct coordinates are entered.
+         * Initiates the sequence after the correct password is entered.
          */
         function triggerInitialActivation() {
             // Update UI state (hide inputs, show results section)
             inputArea.classList.add('hidden');
             resultArea.classList.remove('hidden');
-            targetCoordsText.textContent = `${SECRET_LAT.toFixed(7)}, ${SECRET_LON.toFixed(7)}`;
+            // UPDATED: Show 'Access Granted' instead of the coordinates
+            targetCoordsText.textContent = "ACCESS GRANTED";
 
             // Start the loading bar animation (which is silent)
             startLoadingBar();
@@ -682,34 +664,33 @@
             // 1. Hide the modal and loading bar
             errorModal.classList.add('hidden');
             loadingArea.classList.add('hidden');
-            loadingStatus.classList.add('hidden'); // Hide the loading status
+            loadingStatus.classList.add('hidden'); 
             
             // 2. Show the map and the tracking status
             mapWrapper.classList.remove('hidden');
-            trackingStatus.classList.remove('hidden'); // Show the tracking status
+            trackingStatus.classList.remove('hidden'); 
             
             // Titles
-            loadingTitle.classList.add('hidden');    // Hide loading title
-            trackingTitle.classList.remove('hidden'); // Show tracking title
+            loadingTitle.classList.add('hidden');    
+            trackingTitle.classList.remove('hidden'); 
             
-            // 3. SHOW AND START AUDIO
-            audioControlWrapper.classList.remove('hidden'); // Make the audio player wrapper visible
+            // 3. START AUDIO
+            audioControlWrapper.classList.remove('hidden'); 
             
             // Set the audio volume immediately before playback
             audioPlayer.volume = DEFAULT_VOLUME;
             
             // Attempt to play audio immediately after the user click on "Acknowledge"
             audioPlayer.play().catch(error => {
-                // This catch handles browsers that block autoplay.
                 console.error("Audio autoplay failed. Please click the play button in the 'Incoming Transmission' section.", error);
             });
 
             // 4. Initialize visual dots and start movement loop
             initializeDots();
-            updateDotStyles(); // Initial call to set dot positions correctly based on current screen size
+            updateDotStyles(); 
             simulationInterval = setInterval(updateDots, UPDATE_INTERVAL_MS);
             
-            // 5. Start the active countdown, using the calculated time
+            // 5. Start the active countdown
             startCountdown();
         }
         
@@ -733,7 +714,7 @@
 
         // Initial setup: ensure button state is correct on load
         window.onload = () => {
-            checkCoordinates();
+            checkPassword(); // Use the new function name
             
             // Add a resize listener to handle orientation/size changes while the map is visible.
             window.addEventListener('resize', () => {
@@ -747,5 +728,3 @@
     </script>
 </body>
 </html>
-
-
