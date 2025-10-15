@@ -338,7 +338,6 @@
                 <div class="flashing-text text-3xl">
                     ERROR: Your location is being tracked
                 </div>
-                
                 <!-- UPDATED TEXT COLOR to text-gray-400 for better visibility --><p class="text-sm text-gray-400">
                     Transmission intercepted. Tracking link established by unauthorized entities.
                 </p>
@@ -371,19 +370,20 @@
                     TARGET ACQUIRED
                 </div>
                 
-                <!-- START: VIDEO ELEMENT ADDED HERE --><div class="flex justify-center my-4">
-                    <!-- Using a video element with a placeholder poster image (since external videos won't play) -->
-                    <!-- Autoplay, loop, and muted are set for dramatic effect -->
-                    <video id="endgameVideo" autoplay loop muted playsinline poster="https://placehold.co/320x180/8b0000/FFFFFF?text=VIDEO+LATER"
+                <!-- START: VIDEO ELEMENT ADDED HERE -->
+                <div class="flex justify-center my-4">
+                    <!-- NOTE: The 'poster' attribute has been removed. The video will appear black until you replace the SRC below. -->
+                    <video id="endgameVideo" autoplay loop muted playsinline 
                            class="w-full max-w-xs rounded-lg border-2 border-red-600 shadow-xl">
-                        <source src="nonexistent.mp4" type="video/mp4">
+                        <!-- *** PASTE YOUR PUBLIC VIDEO URL HERE (e.g., https://my-storage.com/video.mp4) *** -->
+                        <source src="https://example.com/replace-me/your-scary-video.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 </div>
                 <!-- END: VIDEO ELEMENT -->
                 
                 <p class="text-sm text-gray-400" style="margin-top: 20px; margin-bottom: 20px;">
-                    Join us in the dark. The doll calls your name.
+                    Just like you searched for Ella, I wonder if anyone else will search for you?
                 </p>
                 
                 <div class="flex justify-center mt-4">
