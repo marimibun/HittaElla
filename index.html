@@ -238,6 +238,10 @@
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen flex items-start justify-center">
+    
+    <!-- SECOND HIDDEN AUDIO PLAYER FOR ALERT SOUND (USES NEW LINK) --><audio id="alertAudio">
+        <source src="https://res.cloudinary.com/dv6jfgesm/video/upload/v1760435544/Creepy_Little_Girl_Laughing_Giggling_Scary_Horror_Sound_Effect_creepylaughing_scarysound_azo3hd.mp3">
+    </audio>
 
     <!-- MAIN WINDOW CONTAINER --><div class="w-full max-w-2xl p-6 space-y-6 win7-dialog">
         <h1 class="win7-title">
@@ -271,7 +275,7 @@
                     <!-- REMOVED 'controls' attribute and visual Tailwind classes from <audio> to hide the player but keep the sound function -->
                     <div id="audioControlWrapper" class="hidden"> 
                         <audio id="audioPlayer" loop>
-                            <source id="audioSource" src="https://res.cloudinary.com/dv6jfgesm/video/upload/v1760457708/Audio_Nu_%C3%84r_Det_DIN__tur_bm2a6s.mp3">
+                            <!-- UPDATED SOURCE URL FOR MAIN LOOPING AUDIO --><source id="audioSource" src="https://res.cloudinary.com/dv6jfgesm/video/upload/v1760435544/Creepy_Little_Girl_Laughing_Giggling_Scary_Horror_Sound_Effect_creepylaughing_scarysound_azo3hd.mp3">
                             Your browser does not support the audio element.
                             <!-- FALLBACK TEXT IF AUDIO FAILS TO LOAD --><p id="audioError" class="audio-error-text hidden">
                                 Error: Sound file not found. Check media host.
@@ -325,7 +329,7 @@
             </div>
         </div>
     </div>
-    <!-- END MAIN WINDOW CONTAINER --><!-- POPUP MODAL (Hidden initially, appears after loading) --><div id="errorModal" class="modal-overlay hidden">
+    <!-- END MAIN WINDOW CONTAINER --><!-- POPUP MODAL 1: INITIAL ALERT (Hidden initially, appears after loading) --><div id="errorModal" class="modal-overlay hidden">
         <!-- win7-popup now contains the proper styling for the dialog box --><div class="win7-popup"> 
             <div class="win7-title" style="margin: 0; border-radius: 6px 6px 0 0;">
                 <span style="color: yellow;">&#9888;</span> Security Alert
@@ -335,13 +339,6 @@
                     ERROR: Your location is being tracked
                 </div>
                 
-                <!-- START: ADDED GIF/Image Placeholder for the Popup --><img id="modalGif" 
-                     src="https://placehold.co/180x180/8b0000/FFFFFF?text=INSERT VIDEO HERE LATER" 
-                     alt="INSERT VIDEO HERE LATER" 
-                     class="mx-auto w-48 h-48 rounded-lg border-2 border-red-600 shadow-xl"
-                     style="margin-top: 10px; margin-bottom: 10px; opacity: 0.9;"
-                     onerror="this.src='https://placehold.co/180x180/8b0000/FFFFFF?text=!!+ALERT+!!'">
-                <!-- END: ADDED GIF/Image Placeholder for the Popup -->
                 <!-- UPDATED TEXT COLOR to text-gray-400 for better visibility --><p class="text-sm text-gray-400">
                     Transmission intercepted. Tracking link established by unauthorized entities.
                 </p>
@@ -362,7 +359,44 @@
             </div>
         </div>
     </div>
-    <!-- END Modal --><!-- =========================================================================
+    <!-- END Modal 1 -->
+    
+    <!-- POPUP MODAL 2: ENDGAME ALERT (Hidden initially, appears when threats converge) --><div id="endgameModal" class="modal-overlay hidden">
+        <div class="win7-popup"> 
+            <div class="win7-title" style="margin: 0; border-radius: 6px 6px 0 0; background: linear-gradient(to bottom, #9b3030, #6a1c1c);">
+                <span style="color: red;">&#10008;</span> Acquisition Complete
+            </div>
+            <div class="p-6 text-center space-y-4">
+                <div class="flashing-text text-3xl" style="animation-duration: 0.2s; color: var(--dark-red); text-shadow: 0 0 10px rgba(255, 0, 0, 0.9);">
+                    TARGET ACQUIRED
+                </div>
+                
+                <!-- START: VIDEO ELEMENT ADDED HERE --><div class="flex justify-center my-4">
+                    <!-- Using a video element with a placeholder poster image (since external videos won't play) -->
+                    <!-- Autoplay, loop, and muted are set for dramatic effect -->
+                    <video id="endgameVideo" autoplay loop muted playsinline poster="https://placehold.co/320x180/8b0000/FFFFFF?text=VIDEO+LATER"
+                           class="w-full max-w-xs rounded-lg border-2 border-red-600 shadow-xl">
+                        <source src="nonexistent.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <!-- END: VIDEO ELEMENT -->
+                
+                <p class="text-sm text-gray-400" style="margin-top: 20px; margin-bottom: 20px;">
+                    Join us in the dark. The doll calls your name.
+                </p>
+                
+                <div class="flex justify-center mt-4">
+                    <button id="closeEndgameButton" 
+                            class="py-2 px-6 rounded-md font-semibold win7-button-red"
+                            style="min-width: 150px;">
+                        Turn around
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END Modal 2 --><!-- =========================================================================
      * JAVASCRIPT LOGIC
      * ========================================================================= --><script>
         // --- CONFIGURATION: EDIT THESE VALUES ---
@@ -370,17 +404,18 @@
         const SECRET_PASSWORD = "CLUE"; 
         
         // Set the default playback volume (0.0 = silent, 1.0 = maximum).
-        const DEFAULT_VOLUME = 1.0; 
+        const DEFAULT_VOLUME = 0.3; 
+        const ALERT_VOLUME = 0.5; // New volume for the alert sound
 
         // Simulation parameters
         const MAX_MAP_SIZE = 500;       
         const THREAT_COUNT = 5;         
-        // UPDATED SPEED: Increased to make the closing time ~30 seconds (was 0.607 for ~50s)
-        const SPEED = 1.012;              
+        // UPDATED SPEED: Increased to make the closing time ~10 seconds
+        const SPEED = 3.036;              
         const UPDATE_INTERVAL_MS = 100; 
         const LOADING_DURATION_MS = 5000; 
-        // UPDATED TIME: Reduced from 50 to 30 seconds
-        const MAX_ACQUISITION_TIME_SECONDS = 30; 
+        // UPDATED TIME: Reduced to 10 seconds
+        const MAX_ACQUISITION_TIME_SECONDS = 10; 
         // ----------------------------------------
         
         let simulationInterval;
@@ -391,12 +426,12 @@
         let currentMapSize = MAX_MAP_SIZE; 
 
         // DOM REFERENCES
-        // UPDATED: Now referencing the single password input
         const passwordInput = document.getElementById('passwordInput');
         const verifyButton = document.getElementById('verifyButton');
         const inputArea = document.getElementById('inputArea');
         const resultArea = document.getElementById('resultArea');
-        const audioPlayer = document.getElementById('audioPlayer');
+        const audioPlayer = document.getElementById('audioPlayer'); // Main loop audio
+        const alertAudio = document.getElementById('alertAudio');   // New alert audio
         const mapContainer = document.getElementById('mapContainer');
         const blueDot = document.getElementById('blueDot');
         
@@ -412,10 +447,17 @@
         // -------------------------------------
 
         const targetCoordsText = document.getElementById('targetCoords');
+        // MODALS
         const errorModal = document.getElementById('errorModal');
-        // Modal buttons
+        const endgameModal = document.getElementById('endgameModal'); // NEW ENDGAME MODAL
+
+        // Modal 1 buttons (Initial Alert)
         const okModalButton = document.getElementById('okModalButton'); 
         const cancelModalButton = document.getElementById('cancelModalButton');
+        
+        // Modal 2 button (Endgame)
+        const closeEndgameButton = document.getElementById('closeEndgameButton'); // NEW ENDGAME BUTTON
+        
         const audioControlWrapper = document.getElementById('audioControlWrapper');
 
         // Other DOM references
@@ -427,10 +469,14 @@
         // AUDIO ERROR REFERENCES
         const audioSource = document.getElementById('audioSource');
         const audioError = document.getElementById('audioError');
+        
+        // =========================================================================
+        // CORE FUNCTIONS
+        // =========================================================================
 
         /**
          * Checks the input value against the secret password, ignoring case.
-         * Enables/disables the button based on the match.
+         * Accepts 'CLUE' or 'clue'.
          */
         function checkPassword() {
             try {
@@ -537,16 +583,33 @@
                 if (countdownTimeRemaining <= 0) {
                     clearInterval(countdownInterval);
                     
-                    // Check if threats are still active when the timer hits zero
+                    // The worst-case time has expired.
                     if (threats.some(t => t.active)) {
-                         // The worst-case time has expired, but the threats are still active 
                          trackingStatusText.textContent = "CRITICAL FAILURE. TARGET ACQUISITION IMMINENT.";
                          countdownDisplay.textContent = "00";
                     }
                 }
             }, 1000); // Update every 1 second
         }
-
+        
+        /**
+         * Called when all threats reach the perimeter. Stops the simulation and shows the final alert.
+         */
+        function showEndgameModal() {
+            // 1. Clean up intervals and audio
+            clearInterval(simulationInterval);
+            clearInterval(countdownInterval);
+            audioPlayer.pause();
+            
+            // 2. Update status to reflect the end state
+            trackingStatusText.textContent = "PERIMETER BREACH. ACQUISITION COMPLETE.";
+            countdownDisplay.parentElement.classList.add('hidden'); 
+            trackingStatus.classList.remove('text-green-600');
+            trackingStatus.classList.add('text-red-600');
+            
+            // 3. Show the end game modal
+            endgameModal.classList.remove('hidden');
+        }
 
         /**
          * The main simulation loop: moves the red dots toward the blue dot.
@@ -566,7 +629,6 @@
                 if (distance < threshold) {
                     // Threat reached the perimeter
                     threat.active = false;
-                    // Slightly reduce opacity and movement speed for visual confirmation
                     threat.element.style.opacity = '0.6'; 
                     return;
                 }
@@ -584,21 +646,23 @@
 
             // Check if all threats have arrived
             if (activeThreats === 0) {
-                clearInterval(simulationInterval);
-                clearInterval(countdownInterval);
-                audioPlayer.pause();
-                trackingStatusText.textContent = "PERIMETER SECURED. ALL HOSTILE ENTITIES ARE STATIONARY.";
-                countdownDisplay.parentElement.classList.add('hidden'); // Hide countdown
-                trackingStatus.classList.remove('text-red-600');
-                trackingStatus.classList.add('text-green-600');
+                // If all threats have arrived, trigger the final end game modal!
+                showEndgameModal();
             }
         }
         
         /**
-         * Shows the error modal/popup.
+         * Shows the initial security alert modal/popup and plays the alert sound.
          */
         function showErrorModal() {
             errorModal.classList.remove('hidden');
+            
+            // Play the alert sound
+            alertAudio.volume = ALERT_VOLUME;
+            alertAudio.play().catch(e => {
+                console.error("Alert audio failed to play:", e);
+                // Optionally show the fallback error text for the alert audio if needed
+            });
         }
 
         /**
@@ -610,12 +674,12 @@
             mapWrapper.classList.add('hidden');
             
             // Status lines
-            trackingStatus.classList.add('hidden'); // Ensure tracking status is hidden
-            loadingStatus.classList.remove('hidden'); // Ensure loading status is visible
+            trackingStatus.classList.add('hidden'); 
+            loadingStatus.classList.remove('hidden'); 
             
             // Titles
-            loadingTitle.classList.remove('hidden'); // Show loading title
-            trackingTitle.classList.add('hidden');   // Hide tracking title 
+            loadingTitle.classList.add('hidden'); 
+            trackingTitle.classList.add('hidden');   
             
             // Reset progress bar
             let progress = 0;
@@ -636,7 +700,7 @@
 
                     if (currentStep >= steps) {
                          clearInterval(loadingInterval);
-                         showErrorModal(); // Show modal after 5 seconds
+                         showErrorModal(); // Show initial alert modal after 5 seconds
                     }
                 }
             }, intervalTime);
@@ -649,7 +713,6 @@
             // Update UI state (hide inputs, show results section)
             inputArea.classList.add('hidden');
             resultArea.classList.remove('hidden');
-            // UPDATED: Show 'Access Granted' instead of the coordinates
             targetCoordsText.textContent = "ACCESS GRANTED";
 
             // Start the loading bar animation (which is silent)
@@ -658,10 +721,11 @@
 
 
         /**
-         * Hides the modal, starts the audio, and begins the map simulation and countdown.
+         * Hides the initial modal, stops the alert sound, starts the main audio, 
+         * and begins the map simulation and countdown.
          */
         function startThreatTracking() { 
-            // 1. Hide the modal and loading bar
+            // 1. Hide the initial alert modal and loading bar
             errorModal.classList.add('hidden');
             loadingArea.classList.add('hidden');
             loadingStatus.classList.add('hidden'); 
@@ -674,15 +738,16 @@
             loadingTitle.classList.add('hidden');    
             trackingTitle.classList.remove('hidden'); 
             
-            // 3. START AUDIO
-            audioControlWrapper.classList.remove('hidden'); 
+            // 3. STOP ALERT AUDIO and START MAIN AUDIO
+            alertAudio.pause();
+            alertAudio.currentTime = 0; // Rewind the alert sound
             
-            // Set the audio volume immediately before playback
+            audioControlWrapper.classList.remove('hidden'); 
             audioPlayer.volume = DEFAULT_VOLUME;
             
-            // Attempt to play audio immediately after the user click on "Acknowledge"
+            // Attempt to play main audio immediately after the user click
             audioPlayer.play().catch(error => {
-                console.error("Audio autoplay failed. Please click the play button in the 'Incoming Transmission' section.", error);
+                console.error("Main audio autoplay failed.", error);
             });
 
             // 4. Initialize visual dots and start movement loop
@@ -694,31 +759,43 @@
             startCountdown();
         }
         
-        // Add listener to the player element itself to catch network errors
+        // =========================================================================
+        // EVENT LISTENERS
+        // =========================================================================
+
+        // Audio Error Handling (applies to both players)
         audioPlayer.addEventListener('error', (e) => {
-             // 4 = MEDIA_ERR_SRC_NOT_SUPPORTED (The common error for inaccessible files)
+             // 4 = MEDIA_ERR_SRC_NOT_SUPPORTED
              if (audioPlayer.networkState === audioPlayer.NETWORK_NO_SOURCE || audioPlayer.error?.code === 4) {
-                 console.error("Audio network error detected. The file link is likely inaccessible or corrupted.");
-                 // Display the UI error message
-                 audioError.classList.remove('hidden');
+                 console.error("Main audio network error detected. The file link is likely inaccessible or corrupted.");
+                 // We only show the error for the main player since it's the continuous element
+                 audioError.classList.remove('hidden'); 
              }
         });
+        alertAudio.addEventListener('error', (e) => {
+            if (alertAudio.networkState === alertAudio.NETWORK_NO_SOURCE || alertAudio.error?.code === 4) {
+                console.error("Alert audio network error detected. The file link is likely inaccessible or corrupted.");
+            }
+        });
 
-        // Try to load the audio immediately on page load to catch the error sooner
-        audioPlayer.load();
 
-        // Attach the handlers to the modal buttons to start the alarm/map
+        // Modal Button Handlers
         okModalButton.onclick = startThreatTracking;
         cancelModalButton.onclick = startThreatTracking;
-
+        
+        // New: Handler to close the final endgame modal.
+        closeEndgameButton.onclick = () => {
+            endgameModal.classList.add('hidden');
+        };
 
         // Initial setup: ensure button state is correct on load
         window.onload = () => {
-            checkPassword(); // Use the new function name
-            
-            // Add a resize listener to handle orientation/size changes while the map is visible.
+            checkPassword(); 
+            audioPlayer.load();
+            alertAudio.load(); // Load the new audio file
+
+            // Add a resize listener to handle orientation/size changes
             window.addEventListener('resize', () => {
-                // Only update dot styles if the result area is visible (i.e., tracking has started)
                 if (!resultArea.classList.contains('hidden')) {
                     updateDotStyles();
                 }
